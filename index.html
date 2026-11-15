@@ -127,6 +127,7 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       <span class="spacer"></span>
       <span class="ref" id="refPreview">—</span>
     </div>
+    <div id="deviceBar" class="muted" style="margin-top:8px"></div>
   </div>
 
   <div class="card">
@@ -203,6 +204,8 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
     <div class="row" style="margin-top:10px">
       <button class="btn primary" id="btnXlsx">⬇ Excel-export</button>
       <button class="btn" id="btnCsv">⬇ CSV</button>
+      <button class="btn" id="btnShare2">📤 Versturen</button>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">📥 Samenvoegen<input type="file" id="fileMerge2" accept=".json,application/json" multiple hidden></label>
       <span class="spacer"></span>
       <span class="muted">Tik op een status om die te wisselen</span>
     </div>
@@ -239,7 +242,7 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
     <h2>Avond</h2>
     <div class="grid">
       <div><label for="s-title">Naam van de avond</label><input id="s-title"></div>
-      <div><label for="s-prefix">Referentie-prefix</label><input id="s-prefix" placeholder="HCE"><div class="muted" style="font-size:12px;margin-top:3px">Gebruik je meerdere telefoons? Geef elk een eigen prefix (HCE-A, HCE-B) zodat nummers nooit dubbel zijn.</div></div>
+      <div><label for="s-prefix">Referentie-prefix</label><input id="s-prefix" placeholder="HCE"><div class="muted" style="font-size:12px;margin-top:3px">Meerdere telefoons? Kies hieronder per telefoon een letter, dan wordt het bv. HCE-A-001.</div></div>
       <div><label for="s-next">Volgend volgnummer</label><input id="s-next" type="number" min="1"></div>
       <div><label for="s-box">Flessen per doos</label><input id="s-box" type="number" min="1"></div>
       <div><label for="s-share">Deel opbrengst voor de club (%)</label><input id="s-share" type="number" min="0" max="100" step="0.5" placeholder="bv. 15"></div>
@@ -257,12 +260,29 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
     <button class="btn small" id="addGift" style="margin-top:8px">+ Kist toevoegen</button>
   </div>
   <div class="row"><button class="btn primary" id="saveSettings">Instellingen opslaan</button></div>
-  <div class="card" style="margin-top:14px">
+  <div class="card" style="margin-top:14px" id="multiCard">
+    <h2>Meerdere telefoons</h2>
+    <div class="grid">
+      <div><label for="s-letter">Letter van deze telefoon</label>
+        <select id="s-letter"><option value="">Geen (alleen deze telefoon)</option><option>A</option><option>B</option><option>C</option><option>D</option><option>E</option><option>F</option><option>G</option><option>H</option></select></div>
+    </div>
+    <ol class="muted" style="padding-left:20px;margin:10px 0">
+      <li>Open de app op elke telefoon en geef ze elk een andere letter. De nummers worden dan HCE-A-001, HCE-B-001 enz. en lopen nooit dubbel.</li>
+      <li>Werken met dezelfde wijnen en prijzen? Stuur vanaf de eerste telefoon de bestellingen (mag ook leeg) en voeg ze samen op de andere: je krijgt de vraag of je de wijnlijst wilt overnemen.</li>
+      <li>Tussendoor of aan het eind: tik op <b>Versturen</b> en stuur het bestand via WhatsApp naar de telefoon die alles verzamelt.</li>
+      <li>Op die telefoon: <b>Samenvoegen</b> en kies de ontvangen bestanden. Dubbele bestellingen worden herkend; de nieuwste versie wint.</li>
+    </ol>
+    <div class="row">
+      <button class="btn primary" id="btnShare">📤 Bestellingen versturen</button>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">📥 Samenvoegen<input type="file" id="fileMerge" accept=".json,application/json" multiple hidden></label>
+    </div>
+  </div>
+  <div class="card">
     <h2>Back-up</h2>
     <p class="muted" style="margin-top:0">Alles staat alleen op dit apparaat (in de browser). Maak tussendoor een back-up, en zeker aan het eind van de avond. Een back-up van een tweede telefoon kun je hier samenvoegen.</p>
     <div class="row">
       <button class="btn" id="btnBackup">⬇ Back-up downloaden</button>
-      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">⬆ Back-up inladen / samenvoegen<input type="file" id="fileImport" accept=".json,application/json" hidden></label>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">⬆ Back-up inladen<input type="file" id="fileImport" accept=".json,application/json" multiple hidden></label>
       <span class="spacer"></span>
       <button class="btn danger" id="btnReset">Alle bestellingen wissen</button>
     </div>
@@ -351,7 +371,13 @@ function parseNum(v){if(v==null)return 0;v=String(v).trim().replace(/€/g,'').r
 function int(v){var n=parseInt(v,10);return isFinite(n)&&n>0?n:0;}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('show');},2200);}
-function makeRef(){var n=state.settings.next||1;return (state.settings.prefix||'HCE')+'-'+String(n).padStart(3,'0');}
+var DEVKEY='hce-wijn-device';
+var device=(function(){try{return JSON.parse(localStorage.getItem(DEVKEY))||{};}catch(e){return {};}})();
+function saveDevice(){try{localStorage.setItem(DEVKEY,JSON.stringify(device));}catch(e){}}
+function refFor(n){return (state.settings.prefix||'HCE')+(device.letter?'-'+device.letter:'')+'-'+String(n).padStart(3,'0');}
+function refTaken(r){return state.orders.some(function(o){return o.ref===r;});}
+function makeRef(){var n=state.settings.next||1;while(refTaken(refFor(n)))n++;return refFor(n);}
+function claimRef(){var n=state.settings.next||1;while(refTaken(refFor(n)))n++;state.settings.next=n+1;return refFor(n);}
 
 /* ---------- order calculations ---------- */
 function orderLines(o){
@@ -427,6 +453,7 @@ function renderEntry(){
   $('giftEntry').innerHTML=g;
   $('giftCard').style.display=state.settings.gifts.length?'':'none';
   $('refPreview').textContent=editingId?(findOrder(editingId)||{}).ref:makeRef();
+  renderDeviceBar();
   updateTotal();
 }
 function renderExtras(){
@@ -506,10 +533,9 @@ $('btnSave').addEventListener('click',function(){
     if(wasTotal!==old.total && !old.paid) openTikkie(old); else {resetForm(); showView('list');}
     return;
   }
-  o.id=uid(); o.ref=makeRef(); o.created=new Date().toISOString();
-  o.paid=paid; o.delivered=false; o.tikkie='';
+  o.id=uid(); o.ref=claimRef(); o.created=new Date().toISOString(); o.updated=o.created;
+  o.paid=paid; o.delivered=false; o.tikkie=''; o.by=device.letter||'';
   state.orders.push(o);
-  state.settings.next=(state.settings.next||1)+1;
   persist(); lastSaved=o;
   if(paid){toast('Opgeslagen: '+o.ref+' (betaald)');resetForm();}
   else openTikkie(o);
@@ -544,13 +570,13 @@ function openTikkie(o){
   $('tkWhatsapp').href=waLink(o);
   var d=$('dlgTikkie'); if(d.showModal) d.showModal(); else d.setAttribute('open','');
 }
-$('tkLink').addEventListener('input',function(){ if(!lastSaved)return; lastSaved.tikkie=this.value.trim(); persist(); $('tkWhatsapp').href=waLink(lastSaved); });
+$('tkLink').addEventListener('input',function(){ if(!lastSaved)return; lastSaved.tikkie=this.value.trim(); lastSaved.updated=new Date().toISOString(); persist(); $('tkWhatsapp').href=waLink(lastSaved); });
 $('tkPaste').addEventListener('click',function(){
   if(navigator.clipboard&&navigator.clipboard.readText){navigator.clipboard.readText().then(function(t){$('tkLink').value=t.trim();$('tkLink').dispatchEvent(new Event('input'));}).catch(function(){toast('Plakken niet toegestaan; houd het veld ingedrukt en kies Plakken');});}
   else toast('Houd het veld ingedrukt en kies Plakken');
 });
 $('tkCopyMsg').addEventListener('click',function(){copy(waMessage(lastSaved));});
-$('tkPaid').addEventListener('click',function(){ lastSaved.paid=!lastSaved.paid; persist(); this.textContent=lastSaved.paid?'↺ Toch niet betaald':'✔ Markeer betaald'; toast(lastSaved.paid?'Gemarkeerd als betaald':'Gemarkeerd als niet betaald'); });
+$('tkPaid').addEventListener('click',function(){ lastSaved.paid=!lastSaved.paid; lastSaved.updated=new Date().toISOString(); persist(); this.textContent=lastSaved.paid?'↺ Toch niet betaald':'✔ Markeer betaald'; toast(lastSaved.paid?'Gemarkeerd als betaald':'Gemarkeerd als niet betaald'); });
 $('tkClose').addEventListener('click',function(){ $('dlgTikkie').close(); var wasEdit=!!editingId; resetForm(); if(wasEdit) showView('list'); else $('f-name').focus(); });
 $('dlgTikkie').addEventListener('close',function(){ if($('view-list').classList.contains('active')) renderList(); });
 function copy(text){
@@ -592,7 +618,7 @@ function renderList(){
       '<div class="row" style="margin-top:8px">'+
       '<span class="badge '+(o.paid?'b-ok':'b-open')+'" data-tog="paid">'+(o.paid?'✔ Betaald':'€ Niet betaald')+'</span>'+
       '<span class="badge '+(o.delivered?'b-ok':'b-grey')+'" data-tog="delivered">'+(o.delivered?'✔ Opgehaald':'📦 Nog ophalen')+'</span>'+
-      '<span class="badge b-grey">'+esc(o.method||'')+'</span>'+
+      '<span class="badge b-grey">'+esc(o.method||'')+'</span>'+(o.by?'<span class="badge b-grey">📱 '+esc(o.by)+'</span>':'')+
       '<span class="spacer"></span>'+
       (o.paid?'':'<button class="btn small" data-act="tikkie">Tikkie</button>')+
       '<button class="btn small" data-act="edit">Bewerk</button>'+
@@ -604,10 +630,10 @@ $('filter').addEventListener('change',renderList);
 $('orderList').addEventListener('click',function(e){
   var card=e.target.closest('.order'); if(!card) return; var o=findOrder(card.dataset.id); if(!o) return;
   var tg=e.target.closest('[data-tog]');
-  if(tg){var k=tg.dataset.tog;o[k]=!o[k];if(k==='delivered')o.deliveredAt=o[k]?new Date().toISOString():'';persist();renderList();return;}
+  if(tg){var k=tg.dataset.tog;o[k]=!o[k];if(k==='delivered')o.deliveredAt=o[k]?new Date().toISOString():'';o.updated=new Date().toISOString();persist();renderList();return;}
   var a=e.target.closest('[data-act]'); if(!a) return;
   if(a.dataset.act==='tikkie') openTikkie(o);
-  if(a.dataset.act==='del'){ if(confirm('Bestelling '+o.ref+' van '+o.name+' verwijderen?')){state.orders=state.orders.filter(function(x){return x!==o;});persist();renderList();} }
+  if(a.dataset.act==='del'){ if(confirm('Bestelling '+o.ref+' van '+o.name+' verwijderen?')){state.orders=state.orders.filter(function(x){return x!==o;});state.deleted=state.deleted||{};state.deleted[o.id]=new Date().toISOString();persist();renderList();} }
   if(a.dataset.act==='edit') editOrder(o);
 });
 function editOrder(o){
@@ -683,13 +709,13 @@ function exportRows(){
   var wines=state.settings.wines, box=state.settings.box||6;
   var head=['Referentie','Datum','Naam','Telefoon','E-mail','Adres','Postcode/plaats','Bedrijf (factuur)','Team/relatie'];
   wines.forEach(function(w,i){head.push((i+1)+'. '+w.name+' (fl)');});
-  head=head.concat(['Andere wijnen','Geschenkkisten','Totaal flessen','Totaalbedrag','Betaalwijze','Betaald','Opgehaald','Tikkie-link','Notitie']);
+  head=head.concat(['Andere wijnen','Geschenkkisten','Totaal flessen','Totaalbedrag','Betaalwijze','Betaald','Opgehaald','Tikkie-link','Notitie','Telefoon (invoer)']);
   var rows=state.orders.map(function(o){
     var r=[o.ref,new Date(o.created).toLocaleString('nl-NL'),o.name,o.phone,o.email,o.address,o.city,o.company,o.team];
     wines.forEach(function(w){var it=(o.items||[]).find(function(x){return x.wid===w.id;});r.push(it?int(it.bottles)+int(it.boxes)*box:'');});
     r.push((o.extras||[]).map(function(x){return x.qty+'x '+x.name+' à '+num(x.price);}).join('; '));
     r.push((o.gifts||[]).map(function(x){return x.qty+'x '+x.name;}).join('; '));
-    r.push(orderBottles(o)); r.push(o.total); r.push(o.method||''); r.push(o.paid?'ja':'nee'); r.push(o.delivered?'ja':'nee'); r.push(o.tikkie||''); r.push(o.note||'');
+    r.push(orderBottles(o)); r.push(o.total); r.push(o.method||''); r.push(o.paid?'ja':'nee'); r.push(o.delivered?'ja':'nee'); r.push(o.tikkie||''); r.push(o.note||''); r.push(o.by||'');
     return r;
   });
   var lines=[['Referentie','Naam','Soort','Nr','Product','Dozen','Losse flessen','Aantal (fl/st)','Prijs','Bedrag','Betaald','Opgehaald']];
@@ -726,6 +752,7 @@ var draft=null;
 function renderSettings(){
   draft=clone(state.settings);
   $('s-title').value=draft.title||'';$('s-prefix').value=draft.prefix||'';$('s-next').value=draft.next||1;$('s-box').value=draft.box||6;$('s-share').value=draft.share||'';$('s-tikkie').value=draft.tikkie||'';
+  $('s-letter').value=device.letter||'';
   renderWineEdit();
 }
 function renderWineEdit(){
@@ -746,35 +773,86 @@ $('addGift').addEventListener('click',function(){draft.gifts.push({id:'g'+uid(),
 $('saveSettings').addEventListener('click',function(){
   draft.title=$('s-title').value.trim();draft.prefix=$('s-prefix').value.trim()||'HCE';draft.next=int($('s-next').value)||1;draft.box=int($('s-box').value)||6;draft.share=$('s-share').value;draft.tikkie=$('s-tikkie').value.trim()||'Wijn {ref} {naam}';
   draft.wines=draft.wines.filter(function(w){return w.name.trim();});draft.gifts=draft.gifts.filter(function(w){return w.name.trim();});
-  var clash=state.orders.some(function(o){return o.ref===draft.prefix+'-'+String(draft.next).padStart(3,'0');});
-  if(clash && !confirm('Referentie '+draft.prefix+'-'+String(draft.next).padStart(3,'0')+' bestaat al. Toch opslaan?')) return;
+  /* claimRef slaat bestaande nummers automatisch over */
   state.settings=draft; persist(); toast('Instellingen opgeslagen'); renderEntry(); renderSettings();
 });
 $('btnBackup').addEventListener('click',function(){
   download('wijnbestellingen_backup_'+fileStamp()+'.json',new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));
 });
-$('fileImport').addEventListener('change',function(){
-  var f=this.files[0]; if(!f) return; var r=new FileReader();
-  r.onload=function(){
-    try{
-      var d=JSON.parse(r.result); if(!d||!Array.isArray(d.orders)) throw 0;
-      var choice=state.orders.length?prompt('Back-up met '+d.orders.length+' bestellingen.\nTyp 1 = samenvoegen met huidige ('+state.orders.length+')\nTyp 2 = alles vervangen','1'):'2';
-      if(choice==='2'){state=d;}
-      else if(choice==='1'){
-        var have={}; state.orders.forEach(function(o){have[o.id]=1;});
-        var refs={}; state.orders.forEach(function(o){refs[o.ref]=1;});
-        var added=0,dup=0; d.orders.forEach(function(o){ if(have[o.id]) return; if(refs[o.ref]) dup++; state.orders.push(o); added++; });
-        if(dup) alert(dup+' toegevoegde bestelling(en) hebben een referentie die al bestond. Controleer het overzicht.');
-        toast(added+' bestellingen toegevoegd');
-      } else return;
-      persist(); renderEntry(); renderSettings(); toast('Back-up ingeladen');
-    }catch(e){alert('Dit is geen geldig back-upbestand.');}
-  };
-  r.readAsText(f); this.value='';
+/* ---------- delen & samenvoegen ---------- */
+function exportPayload(){return {type:'hce-wijn',from:device.letter||'',exported:new Date().toISOString(),settings:state.settings,orders:state.orders,deleted:state.deleted||{}};}
+function shareOrders(){
+  var name='bestellingen_'+(device.letter?'telefoon-'+device.letter+'_':'')+fileStamp()+'.json';
+  var json=JSON.stringify(exportPayload());
+  var file=null; try{file=new File([json],name,{type:'application/json'});}catch(e){}
+  var text=state.orders.length+' bestellingen'+(device.letter?' van telefoon '+device.letter:'')+' ('+(state.settings.title||'wijnproeverij')+')';
+  if(file&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:'Wijnbestellingen',text:text}).catch(function(e){ if(e&&e.name!=='AbortError') download(name,new Blob([json],{type:'application/json'})); });
+  } else { download(name,new Blob([json],{type:'application/json'})); toast('Bestand gedownload; stuur het via WhatsApp'); }
+}
+$('btnShare').addEventListener('click',shareOrders);
+$('btnShare2').addEventListener('click',shareOrders);
+function readFiles(files,cb){
+  var out=[],n=files.length; if(!n) return;
+  Array.prototype.forEach.call(files,function(f,i){var r=new FileReader();r.onload=function(){var d=null;try{d=JSON.parse(r.result);}catch(e){}out[i]={name:f.name,data:d};if(--n===0)cb(out);};r.onerror=function(){out[i]={name:f.name,data:null};if(--n===0)cb(out);};r.readAsText(f);});
+}
+function stamp(o){return o.updated||o.created||'';}
+function mergeData(d){
+  var res={added:0,updated:0,removed:0,same:0};
+  state.deleted=state.deleted||{};
+  var del=d.deleted||{};
+  Object.keys(del).forEach(function(id){
+    if(!state.deleted[id]||state.deleted[id]<del[id]) state.deleted[id]=del[id];
+    var i=state.orders.findIndex(function(o){return o.id===id;});
+    if(i>-1&&stamp(state.orders[i])<=del[id]){state.orders.splice(i,1);res.removed++;}
+  });
+  (d.orders||[]).forEach(function(o){
+    if(!o||!o.id) return;
+    if(state.deleted[o.id]&&state.deleted[o.id]>=stamp(o)) return;
+    var i=state.orders.findIndex(function(x){return x.id===o.id;});
+    if(i<0){state.orders.push(o);res.added++;}
+    else if(stamp(o)>stamp(state.orders[i])){state.orders[i]=o;res.updated++;}
+    else res.same++;
+  });
+  state.orders.sort(function(a,b){return (a.created||'').localeCompare(b.created||'');});
+  return res;
+}
+function sameWines(a){var b=state.settings;return JSON.stringify([a.wines,a.gifts,a.box])===JSON.stringify([b.wines,b.gifts,b.box]);}
+function handleMerge(files){
+  readFiles(files,function(list){
+    var tot={added:0,updated:0,removed:0}, bad=[], settingsFrom=null;
+    list.forEach(function(f){
+      var d=f.data;
+      if(!d||!Array.isArray(d.orders)){bad.push(f.name);return;}
+      var r=mergeData(d); tot.added+=r.added; tot.updated+=r.updated; tot.removed+=r.removed;
+      if(d.settings&&Array.isArray(d.settings.wines)&&!sameWines(d.settings)) settingsFrom=d.settings;
+    });
+    if(settingsFrom&&confirm('Het bestand heeft een andere wijnlijst of andere prijzen. Wil je die overnemen op deze telefoon?')){
+      ['title','prefix','box','share','tikkie','wines','gifts'].forEach(function(k){ if(settingsFrom[k]!=null) state.settings[k]=settingsFrom[k]; });
+    }
+    var refs={},dup=[]; state.orders.forEach(function(o){ if(refs[o.ref]) dup.push(o.ref); refs[o.ref]=1; });
+    persist(); renderEntry(); if($('view-settings').classList.contains('active')) renderSettings(); if($('view-list').classList.contains('active')) renderList();
+    var msg=tot.added+' nieuw, '+tot.updated+' bijgewerkt'+(tot.removed?', '+tot.removed+' verwijderd':'')+'. Totaal nu '+state.orders.length+' bestellingen.';
+    if(bad.length) msg+='\nNiet gelezen: '+bad.join(', ');
+    if(dup.length) msg+='\nLet op, dubbele referenties: '+dup.join(', ')+'. Hadden twee telefoons dezelfde letter?';
+    alert(msg);
+  });
+}
+['fileMerge','fileMerge2','fileImport'].forEach(function(id){ $(id).addEventListener('change',function(){ handleMerge(this.files); this.value=''; }); });
+$('s-letter').addEventListener('change',function(){ device.letter=this.value; saveDevice(); renderEntry(); toast(device.letter?'Deze telefoon is nu '+device.letter:'Geen letter: alleen deze telefoon'); });
+function renderDeviceBar(){
+  var el=$('deviceBar');
+  if(device.letter){ el.innerHTML='📱 Telefoon <b>'+esc(device.letter)+'</b> · <a href="#" data-goto="settings">wijzigen</a>'; }
+  else if(device.single){ el.innerHTML=''; }
+  else { el.innerHTML='Met meerdere telefoons? Kies de letter van deze telefoon: '+['A','B','C','D'].map(function(l){return '<button class="btn small" data-letter="'+l+'">'+l+'</button>';}).join(' ')+' <button class="btn small" data-letter="">alleen deze</button>'; }
+}
+$('deviceBar').addEventListener('click',function(e){
+  var b=e.target.closest('[data-letter]'); if(b){ device.letter=b.dataset.letter; if(!device.letter) device.single=true; saveDevice(); renderEntry(); return; }
+  var g=e.target.closest('[data-goto]'); if(g){ e.preventDefault(); showView(g.dataset.goto); $('multiCard').scrollIntoView(); }
 });
 $('btnReset').addEventListener('click',function(){
   if(!state.orders.length){toast('Er zijn geen bestellingen');return;}
-  if(prompt('Weet je het zeker? Download eerst een back-up.\nTyp WISSEN om alle '+state.orders.length+' bestellingen te verwijderen.')==='WISSEN'){state.orders=[];state.settings.next=1;persist();renderSettings();renderEntry();toast('Alles gewist');}
+  if(prompt('Weet je het zeker? Download eerst een back-up.\nTyp WISSEN om alle '+state.orders.length+' bestellingen te verwijderen.')==='WISSEN'){state.orders=[];state.deleted={};state.settings.next=1;persist();renderSettings();renderEntry();toast('Alles gewist');}
 });
 
 window.addEventListener('beforeunload',function(e){ if(!editingId && orderBottles(buildOrderFromForm())>0){e.preventDefault();e.returnValue='';} });
