@@ -11,6 +11,7 @@ Eén HTML-bestand (`index.html`) om op de proefavond snel bestellingen in te voe
 - Picklijst per wijn (dozen + losse flessen) en printbare klaarzetbonnen
 - Excel-export (.xlsx, of CSV zonder internet) en back-up / samenvoegen als JSON
 - Betalen direct op de clubrekening: vul bij Instellingen het IBAN van de club in. Elke bestelling krijgt dan een betaal-QR-code (EPC/GiroCode-standaard) met bedrag en referentie, en het WhatsApp-bericht noemt IBAN, bedrag en referentie. Met **Stuur QR + tekst** gaat de QR-afbeelding met de tekst via WhatsApp naar de koper. Tikkie blijft beschikbaar als optie.
+- Gasten bestellen zelf: bij Instellingen → *Gasten bestellen zelf* toon of print je een klant-QR. Gasten kiezen hun wijnen op hun eigen telefoon, krijgen een referentie (HCE-K-XXXX) en de betaalgegevens van de club, en sturen hun bestelling met één tik via WhatsApp naar de verzameltelefoon. Die tikt op de link in het bericht (of gebruikt *Klantbestelling plakken*) en de bestelling staat erin, met een prijscontrole tegen de eigen wijnlijst.
 - In het overzicht staat per bestelling op welke telefoon hij is ingevoerd en of het betaalverzoek al verstuurd is (filter: *Betaalverzoek nog niet verstuurd*).
 - Meerdere telefoons: elke telefoon krijgt een letter (HCE-A-001, HCE-B-001), bestellingen versturen via WhatsApp en samenvoegen op één telefoon (nieuwste wijziging wint, verwijderde bestellingen blijven weg)
 
