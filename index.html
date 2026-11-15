@@ -7,71 +7,104 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{
-  --bg:#f5f3ef; --card:#fff; --ink:#1f1d1a; --muted:#6d675f; --line:#e3ddd3;
-  --wine:#7a1f3d; --wine-2:#5e1530; --wine-soft:#f6e8ed;
-  --green:#1f6b45; --green-soft:#e3f2e9; --amber:#9a5b00; --amber-soft:#fdf1dc;
-  --red:#b3261e;
+  color-scheme:light dark;
+  --bg:#f5f3ef; --card:#fff; --ink:#1f1d1a; --muted:#6d675f; --line:#e3ddd3; --field:#fff;
+  --wine:#7a1f3d; --wine-2:#5e1530; --wine-soft:#f6e8ed; --accent:#7a1f3d; --on-wine:#fff;
+  --green:#1f6b45; --green-soft:#e3f2e9; --green-line:#b9dcc8; --amber:#8a5200; --amber-soft:#fdf1dc;
+  --red:#b3261e; --red-line:#ecc; --chip:#ecebe8; --chip-ink:#4d4943; --step:#f3efe9;
+  --info:#eef3ff; --info-line:#c9d6ff; --toast:#222; --on-toast:#fff; --focus:#2563eb;
+  --header:#7a1f3d;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    --bg:#151312; --card:#211e1c; --ink:#f1ece6; --muted:#b3aaa0; --line:#3a3532; --field:#1a1817;
+    --wine:#9b2d50; --wine-2:#b33a62; --wine-soft:#3a1f29; --accent:#f09ab8; --on-wine:#fff;
+    --green:#2f8a5c; --green-soft:#183427; --green-line:#2c5a42; --amber:#f2b85b; --amber-soft:#3a2a12;
+    --red:#ff8a80; --red-line:#5a2c2c; --chip:#2e2a27; --chip-ink:#d6cec5; --step:#2c2826;
+    --info:#1b2235; --info-line:#2f3c5e; --toast:#f1ece6; --on-toast:#151312; --focus:#7aa7ff;
+    --header:#5a1830;
+  }
 }
 *{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-header{background:var(--wine);color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20}
+html{scroll-padding-top:120px;scroll-padding-bottom:140px}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.ic{width:18px;height:18px;flex:none;vertical-align:-3px}
+.num,.amt,.stat b,td.n{font-variant-numeric:tabular-nums}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.skip{position:absolute;left:-999px;top:8px;background:var(--card);color:var(--ink);padding:8px 12px;border-radius:8px;z-index:100}
+.skip:focus{left:8px}
+header{background:var(--header);padding-top:max(12px,env(safe-area-inset-top));color:#fff;padding:12px 16px;position:sticky;top:0;z-index:20}
 header h1{margin:0;font-size:18px;font-weight:650}
 header .sub{font-size:13px;opacity:.85}
 nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
-nav button{flex:1 1 0;min-width:0;background:rgba(255,255,255,.12);color:#fff;border:0;border-radius:8px;padding:8px 4px;font-size:14px;cursor:pointer;white-space:nowrap}
-nav button.active{background:#fff;color:var(--wine);font-weight:600}
-main{max-width:980px;margin:0 auto;padding:16px}
+nav button{flex:1 1 0;min-width:0;min-height:44px;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:8px 2px;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+nav button.active{background:#fff;color:#7a1f3d;font-weight:600}
+main{max-width:980px;margin:0 auto;padding:16px;padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));padding-bottom:calc(24px + env(safe-area-inset-bottom))}
 section.view{display:none}
 section.view.active{display:block}
 .card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:14px}
 .card h2{font-size:16px;margin:0 0 10px}
 .grid{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:3px}
-input,select,textarea{width:100%;font:inherit;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--ink)}
-input:focus,select:focus,textarea:focus{outline:2px solid var(--wine);outline-offset:-1px}
+label{display:block;font-size:14px;font-weight:500;color:var(--muted);margin-bottom:4px}
+input,select,textarea{width:100%;font:inherit;min-height:44px;padding:9px 10px;border:1px solid var(--line);border-radius:8px;background:var(--field);color:var(--ink)}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--accent);outline-offset:-1px}
 button{font:inherit;cursor:pointer}
-.btn{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:8px;padding:9px 14px}
-.btn.primary{background:var(--wine);border-color:var(--wine);color:#fff;font-weight:600}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;min-width:44px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:9px 14px;text-decoration:none;transition:transform .08s ease-out,background-color .15s}
+.btn:active{transform:scale(.97)}
+.btn.primary{background:var(--wine);border-color:var(--wine);color:var(--on-wine);font-weight:600}
 .btn.primary:hover{background:var(--wine-2)}
-.btn.green{background:var(--green);border-color:var(--green);color:#fff}
-.btn.danger{color:var(--red);border-color:#ecc}
-.btn.small{padding:5px 10px;font-size:14px}
+.btn.green{background:var(--green);border-color:var(--green);color:#fff;font-weight:600}
+.btn.danger{color:var(--red);border-color:var(--red-line)}
+.btn.danger-solid{background:var(--red);border-color:var(--red);color:#fff;font-weight:600}
+@media (prefers-color-scheme: dark){.btn.danger-solid{background:#b3261e;border-color:#b3261e}}
+.btn.small{padding:6px 12px;font-size:15px}
+.btn.icon{width:44px;padding:0}
+.btn.link{border:0;background:none;color:var(--accent);text-decoration:underline;padding:6px 4px}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 .spacer{flex:1}
 .muted{color:var(--muted);font-size:14px}
 /* wine entry */
 .wine{display:grid;grid-template-columns:28px 1fr auto;gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
 .wine:last-child{border-bottom:0}
-.wine .nr{font-weight:700;color:var(--wine)}
-.wine .nm{font-weight:550}
+.wine .nr{font-weight:700;color:var(--accent)}
+.wine .nm{font-weight:550;background:none;border:0;padding:4px 0;margin:0;color:var(--ink);text-align:left;cursor:pointer;min-height:32px}
+.wine .nm:active{color:var(--accent)}
 .wine .pr{font-size:13px;color:var(--muted)}
 .qtys{display:flex;gap:10px}
 .qty{display:flex;flex-direction:column;align-items:center}
-.qty small{font-size:11px;color:var(--muted)}
-.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:8px;overflow:hidden}
-.step button{width:34px;height:36px;border:0;background:#f3efe9;font-size:18px;color:var(--wine)}
-.step input{width:42px;border:0;text-align:center;padding:6px 0;border-radius:0;-moz-appearance:textfield}
+.qty small{font-size:12px;color:var(--muted)}
+.step{display:flex;align-items:center;border:1px solid var(--line);border-radius:10px;overflow:hidden;background:var(--field)}
+.step button{width:44px;height:44px;border:0;background:var(--step);font-size:22px;line-height:1;color:var(--accent)}
+.step button:active{background:var(--wine-soft)}
+.step input{width:44px;min-height:44px;border:0;text-align:center;padding:6px 0;border-radius:0;-moz-appearance:textfield;font-variant-numeric:tabular-nums;font-weight:600}
 .step input::-webkit-outer-spin-button,.step input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.wine.has .nm{color:var(--wine)}
-.wine .sub{font-size:13px;color:var(--wine);font-weight:600;text-align:right;grid-column:2/4}
+.wine.has .nm{color:var(--accent)}
+.wine .sub{font-size:14px;color:var(--accent);font-weight:600;text-align:right;grid-column:2/4}
 @media (max-width:560px){
   .wine{grid-template-columns:24px 1fr}
   .wine .qtys{grid-column:1/3;justify-content:flex-end}
 }
-.extra{display:grid;grid-template-columns:1fr 100px 80px 36px;gap:6px;margin-bottom:6px}
-@media (max-width:560px){.extra{grid-template-columns:1fr 80px 64px 36px}}
-.totalbar{position:sticky;bottom:0;background:var(--card);border:2px solid var(--wine);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:10}
-.totalbar .amt{font-size:24px;font-weight:750;color:var(--wine)}
-.ref{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--wine-soft);color:var(--wine);padding:2px 8px;border-radius:6px}
+.extra{display:grid;grid-template-columns:1fr 100px 80px 44px;gap:6px;margin-bottom:6px}
+@media (max-width:560px){.extra{grid-template-columns:1fr 72px 56px 44px}}
+.totalbar{position:sticky;bottom:calc(8px + env(safe-area-inset-bottom));background:var(--card);border:2px solid var(--wine);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;box-shadow:0 -4px 16px rgba(0,0,0,.08);z-index:10}
+.totalbar{flex-wrap:nowrap!important;gap:8px!important}
+.totalbar #btnSave{white-space:normal;line-height:1.2;min-width:0!important;max-width:170px}
+.totalbar .amt{font-size:22px;white-space:nowrap;font-weight:750;color:var(--accent)}
+.ref{font-family:ui-monospace,Menlo,Consolas,monospace;font-weight:700;background:var(--wine-soft);color:var(--accent);overflow-wrap:anywhere;padding:2px 8px;border-radius:6px}
 /* orders list */
-.order{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:#fff}
+.order{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
 .order .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
 .order .nm{font-weight:650}
 .order .lines{font-size:14px;color:var(--muted);margin-top:4px}
-.badge{font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid transparent;font-weight:600;cursor:pointer;user-select:none}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:3px 9px;border-radius:999px;border:1px solid transparent;font-weight:600;user-select:none}
+.badge .ic{width:14px;height:14px;vertical-align:-2px}
+button.badge{min-height:44px;padding:6px 12px;font-size:14px;cursor:pointer;border-color:currentColor}
 .b-open{background:var(--amber-soft);color:var(--amber)}
 .b-ok{background:var(--green-soft);color:var(--green)}
-.b-grey{background:#eee;color:#666}
+@media (prefers-color-scheme: dark){.b-ok{color:#7fd3a6}}
+.b-grey{background:var(--chip);color:var(--chip-ink)}
+button.b-grey{border-color:var(--line)}
 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
 .stat b{display:block;font-size:20px}
@@ -80,23 +113,31 @@ table{width:100%;border-collapse:collapse;font-size:15px}
 th,td{text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font-size:13px;color:var(--muted);font-weight:600}
 td.n,th.n{text-align:right;white-space:nowrap}
-.tikkie{background:#eef3ff;border:1px solid #c9d6ff;border-radius:12px;padding:14px}
-.pay{background:var(--green-soft);border:1px solid #b9dcc8;border-radius:12px;padding:14px;margin-bottom:12px}
+.tikkie{background:var(--info);border:1px solid var(--info-line);border-radius:12px;padding:14px}
+.pay{background:var(--green-soft);border:1px solid var(--green-line);border-radius:12px;padding:14px;margin-bottom:12px}
+.pay.info{background:var(--info);border-color:var(--info-line)}
 .qrbox{background:#fff;border-radius:10px;padding:8px;width:220px;max-width:70vw;margin:8px auto}
 .qrbox svg,#kqCode svg{display:block;width:100%;height:auto}
 .tikkie .big{font-size:28px;font-weight:750}
 .copyline{display:flex;gap:6px;margin:6px 0}
 .copyline input{font-family:ui-monospace,Menlo,Consolas,monospace}
-.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#222;color:#fff;padding:10px 16px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
+.toast{position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom));transform:translateX(-50%);background:var(--toast);color:var(--on-toast);max-width:calc(100% - 32px);text-align:center;padding:10px 16px;border-radius:999px;font-size:15px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:99}
 .toast.show{opacity:1}
-dialog{border:0;border-radius:14px;padding:0;max-width:560px;width:calc(100% - 32px)}
+dialog{border:0;border-radius:14px;padding:0;max-width:560px;width:calc(100% - 32px);max-height:calc(100dvh - 32px);background:var(--card);color:var(--ink)}
+.dlg-x{position:absolute;top:8px;right:8px}
+dialog .inner{position:relative}
+#uiBody{white-space:pre-wrap;margin:8px 0 12px}
+.preview{background:var(--bg);border-radius:8px;padding:10px;margin:8px 0;font-size:15px;white-space:pre-wrap}
+.warn{background:var(--amber-soft);color:var(--amber);border-radius:8px;padding:8px 10px;margin:8px 0;font-weight:600}
+.steps{margin:0;padding-left:22px}
+.steps li{margin:4px 0}
 dialog::backdrop{background:rgba(0,0,0,.45)}
 dialog .inner{padding:16px}
-details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
+details summary{cursor:pointer;color:var(--accent);min-height:32px;font-weight:600;margin:4px 0}
 .print-only{display:none}
 @media print{
   header,nav,.no-print,.totalbar,.toast{display:none!important}
-  body{background:#fff}
+  body{background:#fff;color:#000}
   main{padding:0;max-width:none}
   section.view{display:none!important}
   section.view.printing{display:block!important}
@@ -104,12 +145,13 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
   .print-only{display:block}
   .slip{page-break-inside:avoid;border:1px solid #999;border-radius:6px;padding:8px;margin-bottom:8px}
 }
-.slip{border:1px dashed var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:#fff}
+.slip{border:1px dashed var(--line);border-radius:8px;padding:10px;margin-bottom:10px;background:var(--card)}
 .slip h3{margin:0 0 4px;font-size:16px}
-.check{display:inline-block;width:14px;height:14px;border:1.5px solid #555;border-radius:3px;margin-right:6px;vertical-align:-2px}
+.check{display:inline-block;width:14px;height:14px;border:1.5px solid var(--muted);border-radius:3px;margin-right:6px;vertical-align:-2px}
 </style>
 </head>
 <body>
+<a class="skip" href="#main">Naar de inhoud</a>
 <header>
   <h1 id="hdrTitle">Wijnproeverij HC Eemvallei</h1>
   <div class="sub" id="hdrSub">Bestellingen · Wijnhuis Alexander</div>
@@ -121,9 +163,18 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
   </nav>
 </header>
 
-<main>
+<main id="main" tabindex="-1">
 <!-- NIEUWE BESTELLING -->
 <section class="view active" id="view-new">
+  <div class="card" id="klantIntro" hidden>
+    <h2>Zo bestel je</h2>
+    <ol class="steps">
+      <li>Vul je naam in en kies je wijnen (per fles of per doos van 6).</li>
+      <li>Tik op <b>Bestellen</b> en verstuur je bestelling via WhatsApp.</li>
+      <li>Betaal het bedrag direct aan de club, met je referentie als omschrijving.</li>
+    </ol>
+  </div>
+  <div class="card pay info" id="klantLast" hidden></div>
   <div class="card">
     <div class="row">
       <h2 style="margin:0" id="formTitle">Nieuwe bestelling</h2>
@@ -154,12 +205,14 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
 
   <div class="card">
     <div class="row"><h2 style="margin:0">Geproefde wijnen</h2><span class="spacer"></span><span class="muted" id="boxHint"></span></div>
+    <div class="muted" style="font-size:13px">Tip: tik op een wijnnaam voor +1 fles.</div>
     <div id="wineEntry"></div>
   </div>
 
   <div class="card" id="extraCard">
     <h2>Andere wijnen uit het assortiment</h2>
     <p class="muted" style="margin:0 0 8px">Naam, prijs per fles en aantal flessen.</p>
+    <div class="extra muted" style="font-size:13px;margin-bottom:2px" aria-hidden="true"><span>Wijn</span><span>Prijs</span><span>Flessen</span><span></span></div>
     <div id="extraEntry"></div>
     <button class="btn small" id="addExtra">+ Regel toevoegen</button>
   </div>
@@ -185,8 +238,8 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       <div class="amt" id="totAmt">€ 0,00</div>
     </div>
     <span class="spacer"></span>
-    <button class="btn" id="btnClear">Leegmaken</button>
-    <button class="btn primary" id="btnSave">Opslaan &amp; betalen</button>
+    <button class="btn icon" id="btnClear" aria-label="Formulier leegmaken" title="Leegmaken"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg></button>
+    <button class="btn primary" id="btnSave" style="min-width:140px">Opslaan &amp; betalen</button>
   </div>
 </section>
 
@@ -206,11 +259,11 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       </select>
     </div>
     <div class="row" style="margin-top:10px">
-      <button class="btn primary" id="btnXlsx">⬇ Excel-export</button>
-      <button class="btn" id="btnCsv">⬇ CSV</button>
-      <button class="btn" id="btnShare2">📤 Versturen</button>
-      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">📥 Samenvoegen<input type="file" id="fileMerge2" accept=".json,application/json" multiple hidden></label>
-      <button class="btn" id="btnPasteKlant">📥 Klantbestelling plakken</button>
+      <button class="btn primary" id="btnXlsx"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M8 13h2"/><path d="M14 13h2"/><path d="M8 17h2"/><path d="M14 17h2"/></svg>Excel-export</button>
+      <button class="btn" id="btnCsv"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>CSV</button>
+      <button class="btn" id="btnShare2"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Versturen</button>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Samenvoegen<input type="file" id="fileMerge2" accept=".json,application/json" multiple hidden></label>
+      <button class="btn" id="btnPasteKlant"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="8" height="4" x="8" y="2" rx="1"/><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/></svg>Klantbestelling plakken</button>
       <span class="spacer"></span>
       <span class="muted">Tik op een status om die te wisselen</span>
     </div>
@@ -225,7 +278,7 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       <h2 style="margin:0">Totaal per wijn</h2>
       <span class="spacer"></span>
       <button class="btn small" id="btnCopyPick">Kopieer voor wijnhuis</button>
-      <button class="btn small" id="btnPrintTotals">🖨 Print</button>
+      <button class="btn small" id="btnPrintTotals"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>Print</button>
     </div>
     <h2 class="print-only" id="printTotalsTitle">Totaal per wijn</h2>
     <div id="pickTotals" style="margin-top:10px"></div>
@@ -235,7 +288,7 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       <h2 style="margin:0">Klaarzetbonnen per bestelling</h2>
       <span class="spacer"></span>
       <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px"><input type="checkbox" id="onlyUndelivered" checked style="width:auto"> alleen nog niet opgehaald</label>
-      <button class="btn small" id="btnPrintSlips">🖨 Print bonnen</button>
+      <button class="btn small" id="btnPrintSlips"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>Print bonnen</button>
     </div>
     <div id="slips" style="margin-top:10px"></div>
   </div>
@@ -297,16 +350,16 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
       <li>Op die telefoon: <b>Samenvoegen</b> en kies de ontvangen bestanden. Dubbele bestellingen worden herkend; de nieuwste versie wint.</li>
     </ol>
     <div class="row">
-      <button class="btn primary" id="btnShare">📤 Bestellingen versturen</button>
-      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">📥 Samenvoegen<input type="file" id="fileMerge" accept=".json,application/json" multiple hidden></label>
+      <button class="btn primary" id="btnShare"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>Bestellingen versturen</button>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>Samenvoegen<input type="file" id="fileMerge" accept=".json,application/json" multiple hidden></label>
     </div>
   </div>
   <div class="card">
     <h2>Back-up</h2>
     <p class="muted" style="margin-top:0">Alles staat alleen op dit apparaat (in de browser). Maak tussendoor een back-up, en zeker aan het eind van de avond. Een back-up van een tweede telefoon kun je hier samenvoegen.</p>
     <div class="row">
-      <button class="btn" id="btnBackup">⬇ Back-up downloaden</button>
-      <label class="btn" style="margin:0;color:var(--ink);font-size:16px">⬆ Back-up inladen<input type="file" id="fileImport" accept=".json,application/json" multiple hidden></label>
+      <button class="btn" id="btnBackup"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/></svg>Back-up downloaden</button>
+      <label class="btn" style="margin:0;color:var(--ink);font-size:16px"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" x2="12" y1="3" y2="15"/></svg>Back-up inladen<input type="file" id="fileImport" accept=".json,application/json" multiple hidden></label>
       <span class="spacer"></span>
       <button class="btn danger" id="btnReset">Alle bestellingen wissen</button>
     </div>
@@ -315,8 +368,8 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
 </main>
 
 <!-- Betaal dialog -->
-<dialog id="dlgTikkie"><div class="inner">
-  <div class="row"><h2 style="margin:0">Bestelling opgeslagen</h2><span class="spacer"></span><span class="ref" id="tkRef"></span></div>
+<dialog id="dlgTikkie" aria-labelledby="tkH"><div class="inner">
+  <div class="row" style="padding-right:48px"><h2 style="margin:0" id="tkH">Bestelling opgeslagen</h2><span class="spacer"></span><span class="ref" id="tkRef"></span></div>
   <p class="muted" id="tkName" style="margin:4px 0 12px"></p>
   <div class="muted">Te betalen</div>
   <div style="font-size:28px;font-weight:750;margin-bottom:10px" id="tkAmt"></div>
@@ -339,13 +392,13 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
     <div class="copyline"><input id="tkLink" placeholder="https://tikkie.me/pay/…"><button class="btn small" id="tkPaste">Plak</button></div>
   </details>
   <div class="row">
-    <button class="btn green" id="tkShareQr">📲 Stuur QR + tekst</button>
-    <a class="btn green" id="tkWhatsapp" target="_blank" rel="noopener">WhatsApp (tekst)</a>
+    <button class="btn green" id="tkShareQr"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>Stuur QR + tekst</button>
+    <a class="btn" id="tkWhatsapp" target="_blank" rel="noopener"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>WhatsApp (tekst)</a>
     <button class="btn" id="tkCopyMsg">Kopieer bericht</button>
   </div>
   <div class="muted" id="tkSentInfo" style="margin-top:6px;font-size:13px"></div>
   <div class="row" style="margin-top:14px">
-    <button class="btn" id="tkPaid">✔ Markeer betaald</button>
+    <button class="btn" id="tkPaid"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>Markeer betaald</button>
     <span class="spacer"></span>
     <button class="btn primary" id="tkClose">Volgende bestelling</button>
   </div>
@@ -358,18 +411,19 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
   <div class="muted" style="font-size:13px">Kies je wijnen, stuur je bestelling via WhatsApp en betaal direct aan de club.</div>
   <div class="row no-print" style="margin-top:12px;justify-content:center">
     <button class="btn" id="kqCopy">Kopieer link</button>
-    <button class="btn" id="kqPrint">🖨 Print</button>
+    <button class="btn" id="kqPrint"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect width="12" height="8" x="6" y="14"/></svg>Print</button>
     <button class="btn primary" id="kqClose">Sluiten</button>
   </div>
 </div></dialog>
 
-<dialog id="dlgKlant"><div class="inner">
-  <div class="row"><h2 style="margin:0">Bedankt voor je bestelling!</h2><span class="spacer"></span><span class="ref" id="kRef"></span></div>
+<dialog id="dlgKlant" aria-labelledby="kH"><div class="inner">
+  <button class="btn icon link dlg-x" id="kX" aria-label="Sluiten"><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+  <div class="row" style="padding-right:48px"><h2 style="margin:0" id="kH">Bedankt voor je bestelling!</h2><span class="spacer"></span><span class="ref" id="kRef"></span></div>
   <p class="muted" id="kSum" style="margin:6px 0 12px"></p>
-  <div class="pay" style="background:#eef3ff;border-color:#c9d6ff">
+  <div class="pay info">
     <div style="font-weight:650">Stap 1: stuur je bestelling naar de organisatie</div>
     <p class="muted" style="margin:4px 0 8px;font-size:14px">Zonder dit bericht komt je bestelling niet binnen. WhatsApp opent met het bericht al klaar, je hoeft alleen op verzenden te tikken.</p>
-    <a class="btn green" id="kWa" target="_blank" rel="noopener" style="display:inline-block">📲 Verstuur via WhatsApp</a>
+    <a class="btn green" id="kWa" target="_blank" rel="noopener" ><svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/></svg>Verstuur via WhatsApp</a>
     <div class="muted" id="kSentNote" style="font-size:13px;margin-top:6px"></div>
   </div>
   <div class="pay" id="kPay">
@@ -387,7 +441,17 @@ details summary{cursor:pointer;color:var(--wine);font-weight:600;margin:4px 0}
   <div class="row" style="margin-top:12px"><span class="spacer"></span><button class="btn" id="kNew">Nog een bestelling</button></div>
 </div></dialog>
 
-<div class="toast" id="toast"></div>
+<dialog id="dlgUi" aria-labelledby="uiTitle"><div class="inner">
+  <h2 style="margin:0;font-size:18px" id="uiTitle"></h2>
+  <div id="uiBody"></div>
+  <textarea id="uiInput" rows="4" style="display:none"></textarea>
+  <div class="row" style="justify-content:flex-end;margin-top:10px">
+    <button class="btn" id="uiCancel">Annuleren</button>
+    <button class="btn primary" id="uiOk">OK</button>
+  </div>
+</div></dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
 /* qrcode-generator 1.4.4 (MIT) */
@@ -2092,6 +2156,31 @@ function persist(){
   catch(e){toast('Let op: opslaan in browser mislukt. Maak een back-up!');}
 }
 function $(id){return document.getElementById(id);}
+var ICONS={"download": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>", "upload": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/>", "send": "<path d=\"m22 2-7 20-4-9-9-4Z\"/><path d=\"M22 2 11 13\"/>", "inbox": "<polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/>", "paste": "<rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/>", "print": "<polyline points=\"6 9 6 2 18 2 18 9\"/><path d=\"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"/><rect width=\"12\" height=\"8\" x=\"6\" y=\"14\"/>", "qr": "<rect width=\"5\" height=\"5\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"5\" height=\"5\" x=\"16\" y=\"3\" rx=\"1\"/><rect width=\"5\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/><path d=\"M21 16h-3a2 2 0 0 0-2 2v3\"/><path d=\"M21 21v.01\"/><path d=\"M12 7v3a2 2 0 0 1-2 2H7\"/><path d=\"M3 12h.01\"/><path d=\"M12 3h.01\"/><path d=\"M12 16v.01\"/><path d=\"M16 12h1\"/><path d=\"M21 12v.01\"/><path d=\"M12 21v-1\"/>", "chat": "<path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "euro": "<path d=\"M4 10h12\"/><path d=\"M4 14h9\"/><path d=\"M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2\"/>", "package": "<path d=\"m7.5 4.27 9 5.15\"/><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/>", "mail": "<rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/>", "phone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\"/><path d=\"M12 18h.01\"/>", "note": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/><path d=\"M16 13H8\"/><path d=\"M16 17H8\"/>", "undo": "<path d=\"M3 7v6h6\"/><path d=\"M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13\"/>", "trash": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/>", "sheet": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/><path d=\"M8 13h2\"/><path d=\"M14 13h2\"/><path d=\"M8 17h2\"/><path d=\"M14 17h2\"/>"};
+function ic(n){return '<svg class="ic" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+ICONS[n]+'</svg>';}
+/* in-app vensters i.p.v. alert/confirm/prompt */
+var ui=(function(){
+  function open(o){return new Promise(function(res){
+    var d=$('dlgUi'), ok=$('uiOk'), ca=$('uiCancel'), inp=$('uiInput');
+    $('uiTitle').textContent=o.title||'';
+    if(o.html!=null) $('uiBody').innerHTML=o.html; else $('uiBody').textContent=o.msg||'';
+    inp.style.display=o.input?'':'none'; inp.value=''; inp.placeholder=o.placeholder||'';
+    ok.textContent=o.ok||'OK'; ok.className='btn '+(o.danger?'danger-solid':'primary');
+    ca.style.display=o.cancel===false?'none':''; ca.textContent=o.cancel||'Annuleren';
+    var finished=false;
+    function done(v){ if(finished) return; finished=true; ok.onclick=ca.onclick=d.oncancel=null; if(d.open) d.close(); res(v); }
+    ok.onclick=function(){ if(o.input&&o.confirmText&&inp.value.trim()!==o.confirmText){inp.focus();toast('Typ '+o.confirmText+' om door te gaan');return;} done(o.input?inp.value:true); };
+    ca.onclick=function(){done(o.input?null:false);};
+    d.oncancel=function(e){e.preventDefault();done(o.input?null:false);};
+    d.showModal(); setTimeout(function(){(o.input?inp:(o.danger?ca:ok)).focus();},30);
+  });}
+  return {
+    alert:function(msg,title){return open({msg:msg,title:title||'Let op',cancel:false});},
+    confirm:function(msg,opt){opt=opt||{};opt.msg=msg;return open(opt);},
+    prompt:function(msg,opt){opt=opt||{};opt.msg=msg;opt.input=true;return open(opt);},
+    open:open
+  };
+})();
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
 function eur(n){return '€ '+(Math.round(n*100)/100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function num(n){return (Math.round(n*100)/100).toLocaleString('nl-NL',{minimumFractionDigits:2,maximumFractionDigits:2});}
@@ -2144,6 +2233,7 @@ function showView(v){
   if(v==='pick') renderPick();
   if(v==='settings') renderSettings();
   window.scrollTo(0,0);
+  var m=$('main'); if(m&&document.activeElement&&document.activeElement.closest&&!document.activeElement.closest('main')) m.focus({preventScroll:true});
 }
 
 /* ---------- entry form ---------- */
@@ -2169,14 +2259,14 @@ function renderEntry(){
   var h='';
   state.settings.wines.forEach(function(w,i){
     var it=form.items[w.id]||{};
-    h+='<div class="wine" data-wid="'+w.id+'"><div class="nr">'+(i+1)+'</div><div><div class="nm">'+esc(w.name)+'</div><div class="pr">'+eur(w.price)+' / fles · '+eur(w.price*box)+' / doos</div></div>'+
+    h+='<div class="wine" data-wid="'+w.id+'"><div class="nr">'+(i+1)+'</div><div><button type="button" class="nm" data-plus="i:'+w.id+':bottles" aria-label="'+esc(w.name)+', één fles erbij">'+esc(w.name)+'</button><div class="pr">'+eur(w.price)+' / fles · '+eur(w.price*box)+' / doos</div></div>'+
       '<div class="qtys">'+stepper('i:'+w.id+':bottles',it.bottles,'flessen')+stepper('i:'+w.id+':boxes',it.boxes,'dozen')+'</div><div class="sub" data-sub="'+w.id+'"></div></div>';
   });
   $('wineEntry').innerHTML=h;
   renderExtras();
   var g='';
   state.settings.gifts.forEach(function(k){
-    g+='<div class="wine" style="grid-template-columns:1fr auto"><div><div class="nm">'+esc(k.name)+'</div><div class="pr">'+eur(k.price)+'</div></div><div class="qtys">'+stepper('g:'+k.id+':qty',form.gifts[k.id],'aantal')+'</div></div>';
+    g+='<div class="wine" style="grid-template-columns:1fr auto"><div><button type="button" class="nm" data-plus="g:'+k.id+':qty" aria-label="'+esc(k.name)+', één erbij">'+esc(k.name)+'</button><div class="pr">'+eur(k.price)+'</div></div><div class="qtys">'+stepper('g:'+k.id+':qty',form.gifts[k.id],'aantal')+'</div></div>';
   });
   $('giftEntry').innerHTML=g;
   $('giftCard').style.display=state.settings.gifts.length?'':'none';
@@ -2190,7 +2280,7 @@ function renderExtras(){
     h+='<div class="extra"><input placeholder="Wijn (naam)" value="'+esc(x.name)+'" data-x="'+i+'" data-f="name">'+
       '<input placeholder="Prijs" inputmode="decimal" value="'+esc(x.price)+'" data-x="'+i+'" data-f="price">'+
       '<input placeholder="Fl." inputmode="numeric" value="'+esc(x.qty)+'" data-x="'+i+'" data-f="qty">'+
-      '<button class="btn small" data-xdel="'+i+'" aria-label="verwijder">✕</button></div>';
+      '<button class="btn small icon danger" data-xdel="'+i+'" aria-label="Regel verwijderen">'+ic('x')+'</button></div>';
   });
   $('extraEntry').innerHTML=h;
 }
@@ -2201,6 +2291,8 @@ function setQty(key,val){
 }
 function getQty(key){var p=key.split(':');return p[0]==='i'?int((form.items[p[1]]||{})[p[2]]):int(form.gifts[p[1]]);}
 document.addEventListener('click',function(e){
+  var pl=e.target.closest('[data-plus]');
+  if(pl){var pk=pl.dataset.plus,pv=getQty(pk)+1;setQty(pk,pv);var pi=document.querySelector('[data-qty="'+pk+'"]');if(pi)pi.value=pv;updateTotal();return;}
   var s=e.target.closest('[data-step]');
   if(s){var k=s.dataset.step,v=Math.max(0,getQty(k)+parseInt(s.dataset.d,10));setQty(k,v);
     var inp=document.querySelector('[data-qty="'+k+'"]'); if(inp) inp.value=v||''; updateTotal(); return;}
@@ -2242,9 +2334,10 @@ function updateTotal(){
   $('totCount').textContent=fl+' fles'+(fl===1?'':'sen');
 }
 $('btnClear').addEventListener('click',function(){
-  if(editingId){ if(!confirm('Bewerken annuleren?'))return; }
-  else if(orderBottles(buildOrderFromForm())>0 && !confirm('Formulier leegmaken?')) return;
-  resetForm();
+  var after=function(){ resetForm(); if(KLANT) setupKlantMode(); $('f-name').focus(); };
+  if(editingId){ ui.confirm('Je wijzigingen worden niet opgeslagen.',{title:'Bewerken annuleren?',ok:'Annuleren zonder opslaan',cancel:'Verder bewerken',danger:true}).then(function(y){if(y)after();}); return; }
+  if(orderBottles(buildOrderFromForm())>0||$('f-name').value) ui.confirm('Alles wat je hebt ingevuld wordt gewist.',{title:'Formulier leegmaken?',ok:'Leegmaken',danger:true}).then(function(y){if(y)after();});
+  else after();
 });
 $('btnSave').addEventListener('click',function(){
   var o=buildOrderFromForm();
@@ -2266,7 +2359,7 @@ $('btnSave').addEventListener('click',function(){
   o.paid=paid; o.delivered=false; o.tikkie=''; o.by=device.letter||'';
   state.orders.push(o);
   persist(); lastSaved=o;
-  if(paid){toast('Opgeslagen: '+o.ref+' (betaald)');resetForm();}
+  if(paid){toast('Opgeslagen: '+o.ref+' (betaald)');resetForm();window.scrollTo(0,0);$('f-name').focus();}
   else openTikkie(o);
 });
 
@@ -2309,7 +2402,7 @@ function epcPng(o,cb){
   c.toBlob(cb,'image/png');
 }
 function markSent(o){ o.sentAt=new Date().toISOString(); o.sentBy=device.letter||''; o.updated=o.sentAt; persist(); updateSentInfo(o); }
-function updateSentInfo(o){ var el=$('tkSentInfo'); if(el) el.textContent=o&&o.sentAt?'✉ Betaalverzoek verstuurd '+new Date(o.sentAt).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+(o.sentBy?' door telefoon '+o.sentBy:''):''; }
+function updateSentInfo(o){ var el=$('tkSentInfo'); if(el) el.textContent=o&&o.sentAt?'✓ Betaalverzoek verstuurd '+new Date(o.sentAt).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'})+(o.sentBy?' door telefoon '+o.sentBy:''):''; }
 function shareQr(o){
   var text=waMessage(o);
   if(!state.settings.iban){ window.open(waLink(o),'_blank'); markSent(o); return; }
@@ -2355,7 +2448,7 @@ function openTikkie(o){
     try{$('payQr').innerHTML=epcSvg(o);}catch(e){$('payQr').innerHTML='<div class="muted">QR-code kon niet worden gemaakt.</div>';}
   }
   $('tkDetails').open=!hasIban||o.method==='Tikkie'||!!o.tikkie;
-  $('tkPaid').textContent=o.paid?'↺ Toch niet betaald':'✔ Markeer betaald';
+  $('tkPaid').innerHTML=o.paid?ic('undo')+'Toch niet betaald':ic('check')+'Markeer betaald';
   $('tkWhatsapp').href=waLink(o);
   $('tkShareQr').style.display=hasIban?'':'none';
   updateSentInfo(o);
@@ -2369,9 +2462,12 @@ $('tkPaste').addEventListener('click',function(){
 $('tkCopyMsg').addEventListener('click',function(){copy(waMessage(lastSaved));});
 $('tkShareQr').addEventListener('click',function(){shareQr(lastSaved);});
 $('tkWhatsapp').addEventListener('click',function(){markSent(lastSaved);});
-$('tkPaid').addEventListener('click',function(){ lastSaved.paid=!lastSaved.paid; lastSaved.updated=new Date().toISOString(); persist(); this.textContent=lastSaved.paid?'↺ Toch niet betaald':'✔ Markeer betaald'; toast(lastSaved.paid?'Gemarkeerd als betaald':'Gemarkeerd als niet betaald'); });
-$('tkClose').addEventListener('click',function(){ $('dlgTikkie').close(); var wasEdit=!!editingId; resetForm(); if(wasEdit) showView('list'); else $('f-name').focus(); });
-$('dlgTikkie').addEventListener('close',function(){ if($('view-list').classList.contains('active')) renderList(); });
+$('tkPaid').addEventListener('click',function(){ lastSaved.paid=!lastSaved.paid; lastSaved.updated=new Date().toISOString(); persist(); this.innerHTML=lastSaved.paid?ic('undo')+'Toch niet betaald':ic('check')+'Markeer betaald'; toast(lastSaved.paid?'Gemarkeerd als betaald':'Gemarkeerd als niet betaald'); });
+$('tkClose').addEventListener('click',function(){ $('dlgTikkie').close(); });
+$('dlgTikkie').addEventListener('close',function(){
+  if($('view-new').classList.contains('active')){ var wasEdit=!!editingId; resetForm(); if(wasEdit) showView('list'); else { window.scrollTo(0,0); $('f-name').focus(); } }
+  else if($('view-list').classList.contains('active')) renderList();
+});
 function copy(text){
   function fallback(){var ta=document.createElement('textarea');ta.value=text;ta.style.position='fixed';ta.style.opacity='0';document.body.appendChild(ta);ta.select();try{document.execCommand('copy');toast('Gekopieerd');}catch(e){toast('Kopiëren mislukt');}ta.remove();}
   if(navigator.clipboard&&window.isSecureContext){navigator.clipboard.writeText(text).then(function(){toast('Gekopieerd');},fallback);}else fallback();
@@ -2407,16 +2503,16 @@ function renderList(){
       (o.company?'<span class="badge b-grey">factuur: '+esc(o.company)+'</span>':'')+
       '<span class="spacer"></span><b>'+eur(o.total)+'</b></div>'+
       '<div class="lines">'+ls+'</div>'+
-      (o.note?'<div class="lines">📝 '+esc(o.note)+'</div>':'')+
+      (o.note?'<div class="lines">'+ic('note')+' '+esc(o.note)+'</div>':'')+
       '<div class="row" style="margin-top:8px">'+
-      '<span class="badge '+(o.paid?'b-ok':'b-open')+'" data-tog="paid">'+(o.paid?'✔ Betaald':'€ Niet betaald')+'</span>'+
-      '<span class="badge '+(o.delivered?'b-ok':'b-grey')+'" data-tog="delivered">'+(o.delivered?'✔ Opgehaald':'📦 Nog ophalen')+'</span>'+
-      (o.paid?'':'<span class="badge '+(o.sentAt?'b-ok':'b-open')+'" data-tog="sent">'+(o.sentAt?'✉ Verstuurd'+(o.sentBy?' ('+esc(o.sentBy)+')':''):'✉ Nog versturen')+'</span>')+
-      '<span class="badge b-grey">'+esc(o.method||'')+'</span>'+(o.by?'<span class="badge b-grey" title="ingevoerd op telefoon">📱 '+esc(o.by)+'</span>':'')+
+      '<button class="badge '+(o.paid?'b-ok':'b-open')+'" data-tog="paid" aria-pressed="'+!!o.paid+'">'+(o.paid?ic('check')+'Betaald':ic('euro')+'Niet betaald')+'</button>'+
+      '<button class="badge '+(o.delivered?'b-ok':'b-grey')+'" data-tog="delivered" aria-pressed="'+!!o.delivered+'">'+(o.delivered?ic('check')+'Opgehaald':ic('package')+'Nog ophalen')+'</button>'+
+      (o.paid?'':'<button class="badge '+(o.sentAt?'b-ok':'b-open')+'" data-tog="sent" aria-pressed="'+!!o.sentAt+'">'+ic('mail')+(o.sentAt?'Verstuurd'+(o.sentBy?' ('+esc(o.sentBy)+')':''):'Nog versturen')+'</button>')+
+      '<span class="badge b-grey">'+esc(o.method||'')+'</span>'+(o.by?'<span class="badge b-grey" title="ingevoerd op telefoon">'+ic('phone')+esc(o.by==='K'?'gast':o.by)+'</span>':'')+
       '<span class="spacer"></span>'+
       (o.paid?'':'<button class="btn small" data-act="tikkie">Betalen</button>')+
       '<button class="btn small" data-act="edit">Bewerk</button>'+
-      '<button class="btn small danger" data-act="del">✕</button></div></div>';
+      '<button class="btn small icon danger" data-act="del" aria-label="Bestelling '+esc(o.ref)+' verwijderen">'+ic('trash')+'</button></div></div>';
   }).join('');
 }
 $('search').addEventListener('input',renderList);
@@ -2428,7 +2524,7 @@ $('orderList').addEventListener('click',function(e){
   if(tg){var k=tg.dataset.tog;o[k]=!o[k];if(k==='delivered')o.deliveredAt=o[k]?new Date().toISOString():'';o.updated=new Date().toISOString();persist();renderList();return;}
   var a=e.target.closest('[data-act]'); if(!a) return;
   if(a.dataset.act==='tikkie') openTikkie(o);
-  if(a.dataset.act==='del'){ if(confirm('Bestelling '+o.ref+' van '+o.name+' verwijderen?')){state.orders=state.orders.filter(function(x){return x!==o;});state.deleted=state.deleted||{};state.deleted[o.id]=new Date().toISOString();persist();renderList();} }
+  if(a.dataset.act==='del'){ ui.confirm(o.name+' · '+eur(o.total)+'\nDit kan niet ongedaan worden gemaakt.',{title:'Bestelling '+o.ref+' verwijderen?',ok:'Verwijderen',danger:true}).then(function(y){ if(!y) return; state.orders=state.orders.filter(function(x){return x!==o;});state.deleted=state.deleted||{};state.deleted[o.id]=new Date().toISOString();persist();renderList();toast(o.ref+' verwijderd'); }); }
   if(a.dataset.act==='edit') editOrder(o);
 });
 function editOrder(o){
@@ -2551,8 +2647,8 @@ function renderSettings(){
   renderWineEdit();
 }
 function renderWineEdit(){
-  $('wineEdit').innerHTML=draft.wines.map(function(w,i){return '<tr><td>'+(i+1)+'</td><td><input value="'+esc(w.name)+'" data-we="'+i+'" data-f="name"></td><td style="width:110px"><input inputmode="decimal" value="'+num(w.price)+'" data-we="'+i+'" data-f="price"></td><td style="width:44px"><button class="btn small danger" data-wdel="'+i+'">✕</button></td></tr>';}).join('');
-  $('giftEdit').innerHTML=draft.gifts.map(function(w,i){return '<tr><td><input value="'+esc(w.name)+'" data-ge="'+i+'" data-f="name"></td><td style="width:110px"><input inputmode="decimal" value="'+num(w.price)+'" data-ge="'+i+'" data-f="price"></td><td style="width:44px"><button class="btn small danger" data-gdel="'+i+'">✕</button></td></tr>';}).join('');
+  $('wineEdit').innerHTML=draft.wines.map(function(w,i){return '<tr><td>'+(i+1)+'</td><td><input value="'+esc(w.name)+'" data-we="'+i+'" data-f="name"></td><td style="width:110px"><input inputmode="decimal" value="'+num(w.price)+'" data-we="'+i+'" data-f="price"></td><td style="width:44px"><button class="btn small icon danger" data-wdel="'+i+'" aria-label="Wijn verwijderen">'+ic('trash')+'</button></td></tr>';}).join('');
+  $('giftEdit').innerHTML=draft.gifts.map(function(w,i){return '<tr><td><input value="'+esc(w.name)+'" data-ge="'+i+'" data-f="name"></td><td style="width:110px"><input inputmode="decimal" value="'+num(w.price)+'" data-ge="'+i+'" data-f="price"></td><td style="width:44px"><button class="btn small icon danger" data-gdel="'+i+'" aria-label="Kist verwijderen">'+ic('trash')+'</button></td></tr>';}).join('');
 }
 $('view-settings').addEventListener('input',function(e){
   var t=e.target;
@@ -2560,7 +2656,7 @@ $('view-settings').addEventListener('input',function(e){
   if(t.dataset.ge!=null){var g=draft.gifts[+t.dataset.ge];g[t.dataset.f]=t.dataset.f==='price'?parseNum(t.value):t.value;}
 });
 $('view-settings').addEventListener('click',function(e){
-  var d=e.target.closest('[data-wdel]'); if(d){ if(confirm('Wijn verwijderen uit de lijst? (Bestaande bestellingen blijven bewaard.)')){draft.wines.splice(+d.dataset.wdel,1);renderWineEdit();} }
+  var d=e.target.closest('[data-wdel]'); if(d){ ui.confirm('Bestaande bestellingen blijven bewaard. Vergeet daarna niet op Instellingen opslaan te tikken.',{title:'Wijn uit de lijst halen?',ok:'Verwijderen',danger:true}).then(function(y){ if(y){draft.wines.splice(+d.dataset.wdel,1);renderWineEdit();} }); }
   var g=e.target.closest('[data-gdel]'); if(g){draft.gifts.splice(+g.dataset.gdel,1);renderWineEdit();}
 });
 $('addWine').addEventListener('click',function(){draft.wines.push({id:'w'+uid(),name:'',price:0});renderWineEdit();});
@@ -2568,8 +2664,9 @@ $('addGift').addEventListener('click',function(){draft.gifts.push({id:'g'+uid(),
 $('saveSettings').addEventListener('click',function(){
   draft.title=$('s-title').value.trim();draft.prefix=$('s-prefix').value.trim()||'HCE';draft.next=int($('s-next').value)||1;draft.box=int($('s-box').value)||6;draft.share=$('s-share').value;draft.tikkie=$('s-tikkie').value.trim()||'Wijn {ref} {naam}';
   draft.iban=$('s-iban').value.replace(/\s/g,'').toUpperCase(); draft.holder=$('s-holder').value.trim(); draft.wa=$('s-wa').value.trim();
-  if(draft.iban&&!ibanValid(draft.iban)){alert('Dit IBAN klopt niet (controlegetal). Controleer het nummer.');$('s-iban').focus();return;}
-  if(draft.iban&&!draft.holder){alert('Vul ook in op wiens naam de rekening staat.');$('s-holder').focus();return;}
+  if(draft.iban&&!ibanValid(draft.iban)){fieldError('s-iban','Dit IBAN klopt niet (controlegetal). Controleer het nummer.');return;}
+  if(draft.iban&&!draft.holder){fieldError('s-holder','Vul in op wiens naam de rekening staat.');return;}
+  clearFieldErrors();
   draft.wines=draft.wines.filter(function(w){return w.name.trim();});draft.gifts=draft.gifts.filter(function(w){return w.name.trim();});
   /* claimRef slaat bestaande nummers automatisch over */
   state.settings=draft; persist(); toast('Instellingen opgeslagen'); if(!editingId) $('f-method').value=draft.iban?'QR / overmaken':'Tikkie'; renderEntry(); renderSettings();
@@ -2577,6 +2674,13 @@ $('saveSettings').addEventListener('click',function(){
 $('btnBackup').addEventListener('click',function(){
   download('wijnbestellingen_backup_'+fileStamp()+'.json',new Blob([JSON.stringify(state,null,1)],{type:'application/json'}));
 });
+function fieldError(id,msg){
+  clearFieldErrors(); var f=$(id), e=document.createElement('div');
+  e.className='ferr'; e.id=id+'-err'; e.style.cssText='color:var(--red);font-size:14px;margin-top:4px;font-weight:600'; e.textContent=msg;
+  f.setAttribute('aria-invalid','true'); f.setAttribute('aria-describedby',e.id); f.insertAdjacentElement('afterend',e);
+  f.scrollIntoView({block:'center'}); f.focus();
+}
+function clearFieldErrors(){ document.querySelectorAll('.ferr').forEach(function(e){var f=$(e.id.replace(/-err$/,'')); if(f){f.removeAttribute('aria-invalid');f.removeAttribute('aria-describedby');} e.remove();}); }
 /* ---------- delen & samenvoegen ---------- */
 function exportPayload(){return {type:'hce-wijn',from:device.letter||'',exported:new Date().toISOString(),settings:state.settings,orders:state.orders,deleted:state.deleted||{}};}
 function shareOrders(){
@@ -2615,7 +2719,7 @@ function mergeData(d){
   state.orders.sort(function(a,b){return (a.created||'').localeCompare(b.created||'');});
   return res;
 }
-function sameWines(a){var b=state.settings;return JSON.stringify([a.wines,a.gifts,a.box,a.iban||'',a.holder||''])===JSON.stringify([b.wines,b.gifts,b.box,b.iban||'',b.holder||'']);}
+function sameWines(a){var b=state.settings;return JSON.stringify([a.wines,a.gifts,a.box,a.iban||b.iban||'',a.holder||b.holder||''])===JSON.stringify([b.wines,b.gifts,b.box,b.iban||'',b.holder||'']);}
 function handleMerge(files){
   readFiles(files,function(list){
     var tot={added:0,updated:0,removed:0}, bad=[], settingsFrom=null;
@@ -2625,22 +2729,27 @@ function handleMerge(files){
       var r=mergeData(d); tot.added+=r.added; tot.updated+=r.updated; tot.removed+=r.removed;
       if(d.settings&&Array.isArray(d.settings.wines)&&!sameWines(d.settings)) settingsFrom=d.settings;
     });
-    if(settingsFrom&&confirm('Het bestand heeft een andere wijnlijst, andere prijzen of een ander club-IBAN. Wil je die overnemen op deze telefoon?')){
-      ['title','prefix','box','share','tikkie','iban','holder','wa','wines','gifts'].forEach(function(k){ if(settingsFrom[k]!=null) state.settings[k]=settingsFrom[k]; });
-    }
+    var finish=function(){
     var refs={},dup=[]; state.orders.forEach(function(o){ if(refs[o.ref]) dup.push(o.ref); refs[o.ref]=1; });
     persist(); renderEntry(); if($('view-settings').classList.contains('active')) renderSettings(); if($('view-list').classList.contains('active')) renderList();
     var msg=tot.added+' nieuw, '+tot.updated+' bijgewerkt'+(tot.removed?', '+tot.removed+' verwijderd':'')+'. Totaal nu '+state.orders.length+' bestellingen.';
     if(bad.length) msg+='\nNiet gelezen: '+bad.join(', ');
-    if(dup.length) msg+='\nLet op, dubbele referenties: '+dup.join(', ')+'. Hadden twee telefoons dezelfde letter?';
-    alert(msg);
+    if(dup.length) msg+='\n\nLet op, dubbele referenties: '+dup.join(', ')+'. Hadden twee telefoons dezelfde letter?';
+    ui.alert(msg,'Samenvoegen klaar');
+    };
+    if(settingsFrom){
+      ui.confirm('Het bestand heeft een andere wijnlijst, andere prijzen of een ander club-IBAN. Wil je die overnemen op deze telefoon?',{title:'Instellingen overnemen?',ok:'Overnemen',cancel:'Eigen instellingen houden'}).then(function(y){
+        if(y) ['title','prefix','box','share','tikkie','iban','holder','wa','wines','gifts'].forEach(function(k){ if(settingsFrom[k]!=null&&settingsFrom[k]!=='') state.settings[k]=settingsFrom[k]; });
+        finish();
+      });
+    } else finish();
   });
 }
 ['fileMerge','fileMerge2','fileImport'].forEach(function(id){ $(id).addEventListener('change',function(){ handleMerge(this.files); this.value=''; }); });
 $('s-letter').addEventListener('change',function(){ device.letter=this.value; saveDevice(); renderEntry(); toast(device.letter?'Deze telefoon is nu '+device.letter:'Geen letter: alleen deze telefoon'); });
 function renderDeviceBar(){
   var el=$('deviceBar');
-  if(device.letter){ el.innerHTML='📱 Telefoon <b>'+esc(device.letter)+'</b> · <a href="#" data-goto="settings">wijzigen</a>'; }
+  if(device.letter){ el.innerHTML=ic('phone')+' Telefoon <b>'+esc(device.letter)+'</b> · <a href="#" data-goto="settings">wijzigen</a>'; }
   else if(device.single){ el.innerHTML=''; }
   else { el.innerHTML='Met meerdere telefoons? Kies de letter van deze telefoon: '+['A','B','C','D'].map(function(l){return '<button class="btn small" data-letter="'+l+'">'+l+'</button>';}).join(' ')+' <button class="btn small" data-letter="">alleen deze</button>'; }
 }
@@ -2663,15 +2772,19 @@ function klantUrl(){
 }
 $('btnKlantQr').addEventListener('click',function(){
   var st=state.settings;
-  if(!st.iban){alert('Vul eerst het IBAN van de club in en sla de instellingen op.');return;}
-  if(!st.wa&&!confirm('Er is geen WhatsApp-nummer voor de verzameltelefoon ingevuld. Gasten moeten dan zelf een contact kiezen. Toch doorgaan?'))return;
+  if(!st.iban){ui.alert('Vul eerst het IBAN van de club in en sla de instellingen op.');return;}
+  if(!st.wa){ ui.confirm('Er is geen WhatsApp-nummer voor de verzameltelefoon ingevuld. Gasten moeten dan zelf een contact kiezen.',{title:'Geen WhatsApp-nummer',ok:'Toch doorgaan',cancel:'Nummer invullen'}).then(function(y){ if(y) showKlantQr(); else $('s-wa').focus(); }); return; }
+  showKlantQr();
+});
+function showKlantQr(){
+  var st=state.settings;
   var url=klantUrl();
   var q=qrcode(0,'L'); qrcode.stringToBytes=qrcode.stringToBytesFuncs['UTF-8']; q.addData(url,'Byte'); q.make();
   $('kqCode').innerHTML=q.createSvgTag({cellSize:4,margin:2,scalable:true,alt:'Klant-QR'});
   $('kqTitle').textContent=st.title||'Wijnproeverij';
   $('dlgKlantQr').dataset.url=url;
   $('dlgKlantQr').showModal();
-});
+}
 $('kqClose').addEventListener('click',function(){$('dlgKlantQr').close();});
 $('kqCopy').addEventListener('click',function(){copy($('dlgKlantQr').dataset.url);});
 $('kqPrint').addEventListener('click',function(){
@@ -2696,16 +2809,31 @@ function klantSubmit(o){
   var msg='Nieuwe wijnbestelling '+o.ref+'\n'+o.name+(o.phone?' ('+o.phone+')':'')+'\n'+lines+'\nTotaal: '+eur(o.total)+
     (o.note?'\nNotitie: '+o.note:'')+'\n\nInlezen in de app (verzameltelefoon):\n'+base+'#import='+klantCode(o);
   var st=state.settings;
-  $('kRef').textContent=o.ref; $('kSum').textContent=o.name+' · '+eur(o.total);
-  $('kWa').href='https://wa.me/'+waNumber(st.wa)+'?text='+encodeURIComponent(msg);
-  $('kSentNote').textContent='';
-  $('kAmt').textContent=eur(o.total); $('kIban').value=fmtIban(st.iban); $('kHolder').value=st.holder||''; $('kAmtTxt').value=num(o.total); $('kDesc').value=payDesc(o);
-  $('kPay').style.display=st.iban?'':'none';
-  try{localStorage.setItem('hce-wijn-klant-last',JSON.stringify({ref:o.ref,name:o.name,total:o.total,msgHref:$('kWa').href,iban:st.iban,holder:st.holder,desc:payDesc(o)}));}catch(e){}
+  var last={ref:o.ref,name:o.name,total:o.total,href:'https://wa.me/'+waNumber(st.wa)+'?text='+encodeURIComponent(msg),iban:st.iban,holder:st.holder,desc:payDesc(o),created:o.created,sent:false};
+  saveKlantLast(last); resetForm(); setupKlantMode(); showKlantDialog(last);
+}
+function getKlantLast(){try{var l=JSON.parse(localStorage.getItem('hce-wijn-klant-last'));return l&&l.ref?l:null;}catch(e){return null;}}
+function saveKlantLast(l){try{localStorage.setItem('hce-wijn-klant-last',JSON.stringify(l));}catch(e){} renderKlantLast();}
+function showKlantDialog(l){
+  $('kRef').textContent=l.ref; $('kSum').textContent=l.name+' · '+eur(l.total);
+  $('kWa').href=l.href;
+  $('kSentNote').textContent=l.sent?'✓ WhatsApp is geopend. Heb je op verzenden getikt? Dan is je bestelling binnen.':'';
+  $('kAmt').textContent=eur(l.total); $('kIban').value=fmtIban(l.iban); $('kHolder').value=l.holder||''; $('kAmtTxt').value=num(l.total); $('kDesc').value=l.desc;
+  $('kPay').style.display=l.iban?'':'none';
   $('dlgKlant').showModal();
 }
-$('kWa').addEventListener('click',function(){ $('kSentNote').textContent='✔ WhatsApp geopend. Heb je op verzenden getikt? Dan is je bestelling binnen.'; });
-$('kNew').addEventListener('click',function(){ $('dlgKlant').close(); resetForm(); setupKlantMode(); window.scrollTo(0,0); });
+function renderKlantLast(){
+  var el=$('klantLast'), l=KLANT&&getKlantLast();
+  if(!l||(Date.now()-new Date(l.created).getTime())>3*864e5){el.hidden=true;return;}
+  el.hidden=false;
+  el.innerHTML='<div class="row"><div><b>Je laatste bestelling</b> <span class="ref">'+esc(l.ref)+'</span><div class="muted">'+esc(l.name)+' · '+eur(l.total)+' · '+(l.sent?'WhatsApp geopend':'<b style="color:var(--amber)">nog niet verstuurd</b>')+'</div></div><span class="spacer"></span>'+
+    '<button class="btn small" id="klOpen">'+(l.sent?'Betaalgegevens':'Verstuur alsnog')+'</button></div>';
+  $('klOpen').onclick=function(){showKlantDialog(l);};
+}
+$('kWa').addEventListener('click',function(){ var l=getKlantLast(); if(l){l.sent=true;saveKlantLast(l);} $('kSentNote').textContent='✓ WhatsApp is geopend. Heb je op verzenden getikt? Dan is je bestelling binnen.'; });
+$('kNew').addEventListener('click',function(){ $('dlgKlant').close(); window.scrollTo(0,0); $('f-name').focus(); });
+$('kX').addEventListener('click',function(){ $('dlgKlant').close(); });
+$('dlgKlant').addEventListener('close',function(){ renderKlantLast(); });
 function setupKlantMode(){
   document.body.classList.add('klant');
   document.querySelector('header nav').style.display='none';
@@ -2714,10 +2842,13 @@ function setupKlantMode(){
   $('formTitle').textContent='Jouw bestelling';
   $('btnSave').textContent='Bestellen';
   $('refPreview').style.display='none';
+  $('formTitle').closest('.card').style.display='none';
+  var pl=document.querySelector('label[for="f-phone"]'); if(pl) pl.textContent='Telefoon';
+  $('klantIntro').hidden=false; renderKlantLast();
   document.title=(state.settings.title||'Wijnproeverij')+' · bestellen';
 }
 function importKlant(code){
-  var d; try{d=JSON.parse(b64d(code));}catch(e){alert('Deze bestelcode is ongeldig of niet volledig gekopieerd.');return false;}
+  var d; try{d=JSON.parse(b64d(code));}catch(e){return ui.alert('Deze bestelcode is ongeldig of niet volledig gekopieerd.').then(function(){return false;});}
   var st=state.settings, box=st.box||6, o={
     id:'k'+String(d.r).replace(/[^A-Za-z0-9]/g,'')+'_'+(d.ts||'').replace(/[^0-9]/g,'').slice(0,14),
     ref:d.r,name:d.n||'',phone:d.ph||'',email:d.em||'',address:d.a||'',city:d.c||'',company:d.co||'',team:d.tm||'',note:d.no||'',
@@ -2728,25 +2859,28 @@ function importKlant(code){
   (d.gi||[]).forEach(function(x){var g=st.gifts.find(function(k){return k.id===x[0];}); if(!g){unknown++;return;} o.gifts.push({gid:g.id,name:g.name,price:g.price,qty:int(x[1])});});
   o.total=orderTotal(o);
   var exists=state.orders.some(function(x){return x.id===o.id;});
-  if(exists){toast(o.ref+' was al ingelezen');return true;}
+  if(exists){toast(o.ref+' was al ingelezen');return Promise.resolve(true);}
   var warn='';
-  if(Math.abs(o.total-(d.t||0))>0.004) warn+='\nLET OP: de gast zag '+eur(d.t||0)+', volgens jouw prijslijst is het '+eur(o.total)+'.';
-  if(unknown) warn+='\nLET OP: '+unknown+' product(en) staan niet in jouw wijnlijst en zijn overgeslagen.';
-  var lines=orderLines(o).map(function(l){return qtyText(l)+' '+l.name;}).join('\n');
-  if(!confirm('Klantbestelling '+o.ref+' van '+o.name+' inlezen?\n\n'+lines+'\nTotaal: '+eur(o.total)+warn)) return false;
-  o.sentAt=o.created; o.sentBy='K';
-  mergeData({orders:[o]}); persist();
-  toast(o.ref+' ingelezen'); return true;
+  if(Math.abs(o.total-(d.t||0))>0.004) warn+='<div class="warn">Let op: de gast zag '+eur(d.t||0)+', volgens jouw prijslijst is het '+eur(o.total)+'.</div>';
+  if(unknown) warn+='<div class="warn">Let op: '+unknown+' product(en) staan niet in jouw wijnlijst en zijn overgeslagen.</div>';
+  var lines=orderLines(o).map(function(l){return esc(qtyText(l)+' '+l.name);}).join('\n');
+  return ui.open({title:'Klantbestelling '+o.ref+' inlezen?',html:'<b>'+esc(o.name)+'</b>'+(o.phone?' · '+esc(o.phone):'')+'<div class="preview">'+lines+'\n<b>Totaal: '+eur(o.total)+'</b></div>'+warn,ok:'Inlezen'}).then(function(y){
+    if(!y) return false;
+    o.sentAt=o.created; o.sentBy='K';
+    mergeData({orders:[o]}); persist();
+    toast(o.ref+' ingelezen'); return true;
+  });
 }
 $('btnPasteKlant').addEventListener('click',function(){
-  var t=prompt('Plak hier het WhatsApp-bericht van de gast (of alleen de link):');
-  if(!t) return; var m=t.match(/#import=([A-Za-z0-9_-]+)/)||t.trim().match(/^([A-Za-z0-9_-]{20,})$/);
-  if(!m){alert('Geen bestelcode gevonden in de geplakte tekst.');return;}
-  if(importKlant(m[1])) renderList();
+  ui.prompt('Houd het bericht van de gast in WhatsApp ingedrukt, kies Kopiëren en plak het hieronder.',{title:'Klantbestelling plakken',ok:'Inlezen',placeholder:'Plak hier het bericht of de link'}).then(function(t){
+    if(!t) return; var m=t.match(/#import=([A-Za-z0-9_-]+)/)||t.trim().match(/^([A-Za-z0-9_-]{20,})$/);
+    if(!m){ui.alert('Geen bestelcode gevonden in de geplakte tekst. Kopieer het hele bericht, inclusief de link onderaan.');return;}
+    importKlant(m[1]).then(function(ok){ if(ok) renderList(); });
+  });
 });
 $('btnReset').addEventListener('click',function(){
   if(!state.orders.length){toast('Er zijn geen bestellingen');return;}
-  if(prompt('Weet je het zeker? Download eerst een back-up.\nTyp WISSEN om alle '+state.orders.length+' bestellingen te verwijderen.')==='WISSEN'){state.orders=[];state.deleted={};state.settings.next=1;persist();renderSettings();renderEntry();toast('Alles gewist');}
+  ui.prompt('Dit verwijdert alle '+state.orders.length+' bestellingen op deze telefoon. Download eerst een back-up.\n\nTyp WISSEN om door te gaan.',{title:'Alle bestellingen wissen?',ok:'Alles wissen',danger:true,confirmText:'WISSEN',placeholder:'WISSEN'}).then(function(t){ if(t&&t.trim()==='WISSEN'){state.orders=[];state.deleted={};state.settings.next=1;persist();renderSettings();renderEntry();toast('Alles gewist');} });
 });
 
 window.addEventListener('beforeunload',function(e){ if(KLANT) return; if(!editingId && orderBottles(buildOrderFromForm())>0){e.preventDefault();e.returnValue='';} });
@@ -2755,7 +2889,7 @@ if(KLANT){ setupKlantMode(); }
 else {
   var checkImport=function(){
     var im=location.hash.match(/^#import=([A-Za-z0-9_-]+)/);
-    if(im){ history.replaceState(null,'',location.pathname+location.search); setTimeout(function(){ if(importKlant(im[1])) showView('list'); },50); }
+    if(im){ history.replaceState(null,'',location.pathname+location.search); setTimeout(function(){ importKlant(im[1]).then(function(ok){ if(ok) showView('list'); }); },50); }
   };
   checkImport(); window.addEventListener('hashchange',checkImport);
 }
