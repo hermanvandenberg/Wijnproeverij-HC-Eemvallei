@@ -47,6 +47,11 @@ header{background:var(--header);padding-top:max(12px,env(safe-area-inset-top));c
 header h1{margin:0;font-size:18px;font-weight:650;padding-right:110px}
 .theme-btn{position:absolute;top:max(8px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:inline-flex;align-items:center;gap:6px;min-height:44px;min-width:44px;padding:6px 12px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:14px}
 .theme-btn .ic{width:16px;height:16px}
+.linkpill{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border-radius:999px;padding:3px 10px;cursor:pointer}
+.linkpill .dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;flex:none}
+.linkpill.ok .dot{background:#4ade80}.linkpill.wait .dot{background:#fbbf24}.linkpill.err .dot{background:#f87171}
+.code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:800;letter-spacing:6px;color:var(--accent)}
+.peers{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
 header .sub{font-size:13px;opacity:.85}
 nav{display:flex;gap:4px;margin-top:10px;overflow-x:auto}
 nav button{flex:1 1 0;min-width:0;min-height:44px;background:rgba(255,255,255,.14);color:#fff;border:0;border-radius:8px;padding:8px 2px;font-size:14px;cursor:pointer;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -170,6 +175,7 @@ details summary{cursor:pointer;color:var(--accent);min-height:32px;font-weight:6
   <button class="theme-btn" id="themeBtn" type="button"></button>
   <h1 id="hdrTitle">Wijnproeverij HC Eemvallei</h1>
   <div class="sub" id="hdrSub">Bestellingen · Wijnhuis Alexander</div>
+  <div class="linkpill" id="linkStatus" role="status" aria-live="polite" hidden></div>
   <nav>
     <button data-view="new" class="active">Nieuw</button>
     <button data-view="list">Overzicht</button>
@@ -311,6 +317,11 @@ details summary{cursor:pointer;color:var(--accent);min-height:32px;font-weight:6
 
 <!-- INSTELLINGEN -->
 <section class="view" id="view-settings">
+  <div class="card" id="linkCard">
+    <h2>Laptops live koppelen</h2>
+    <p class="muted" style="margin-top:0">Neem met meerdere laptops tegelijk bestellingen op. Alles komt direct binnen op één centrale laptop, waar de betaalverzoeken (Tikkie of QR) worden verstuurd. Werkt via internet, zonder account.</p>
+    <div id="linkBox"></div>
+  </div>
   <div class="card">
     <h2>Avond</h2>
     <div class="grid">
@@ -352,7 +363,7 @@ details summary{cursor:pointer;color:var(--accent);min-height:32px;font-weight:6
       <span class="muted" style="font-size:13px">Sla eerst de instellingen op. Pas je prijzen aan, maak dan een nieuwe QR.</span>
     </div>
   </div>
-  <div class="card" style="margin-top:14px" id="multiCard">
+  <div class="card" id="multiCard">
     <h2>Meerdere telefoons</h2>
     <div class="grid">
       <div><label for="s-letter">Letter van deze telefoon</label>
@@ -2169,6 +2180,7 @@ function persist(){
   if(KLANT) return;
   try{localStorage.setItem(KEY,JSON.stringify(state));}
   catch(e){toast('Let op: opslaan in browser mislukt. Maak een back-up!');}
+  if(window.__linkChanged) window.__linkChanged();
 }
 function $(id){return document.getElementById(id);}
 var ICONS={"download": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"7 10 12 15 17 10\"/><line x1=\"12\" x2=\"12\" y1=\"15\" y2=\"3\"/>", "upload": "<path d=\"M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4\"/><polyline points=\"17 8 12 3 7 8\"/><line x1=\"12\" x2=\"12\" y1=\"3\" y2=\"15\"/>", "send": "<path d=\"m22 2-7 20-4-9-9-4Z\"/><path d=\"M22 2 11 13\"/>", "inbox": "<polyline points=\"22 12 16 12 14 15 10 15 8 12 2 12\"/><path d=\"M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z\"/>", "paste": "<rect width=\"8\" height=\"4\" x=\"8\" y=\"2\" rx=\"1\"/><path d=\"M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2\"/>", "print": "<polyline points=\"6 9 6 2 18 2 18 9\"/><path d=\"M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2\"/><rect width=\"12\" height=\"8\" x=\"6\" y=\"14\"/>", "qr": "<rect width=\"5\" height=\"5\" x=\"3\" y=\"3\" rx=\"1\"/><rect width=\"5\" height=\"5\" x=\"16\" y=\"3\" rx=\"1\"/><rect width=\"5\" height=\"5\" x=\"3\" y=\"16\" rx=\"1\"/><path d=\"M21 16h-3a2 2 0 0 0-2 2v3\"/><path d=\"M21 21v.01\"/><path d=\"M12 7v3a2 2 0 0 1-2 2H7\"/><path d=\"M3 12h.01\"/><path d=\"M12 3h.01\"/><path d=\"M12 16v.01\"/><path d=\"M16 12h1\"/><path d=\"M21 12v.01\"/><path d=\"M12 21v-1\"/>", "chat": "<path d=\"M7.9 20A9 9 0 1 0 4 16.1L2 22Z\"/>", "check": "<path d=\"M20 6 9 17l-5-5\"/>", "x": "<path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/>", "euro": "<path d=\"M4 10h12\"/><path d=\"M4 14h9\"/><path d=\"M19 6a7.7 7.7 0 0 0-5.2-2A7.9 7.9 0 0 0 6 12c0 4.4 3.5 8 7.8 8 2 0 3.8-.8 5.2-2\"/>", "package": "<path d=\"m7.5 4.27 9 5.15\"/><path d=\"M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z\"/><path d=\"m3.3 7 8.7 5 8.7-5\"/><path d=\"M12 22V12\"/>", "mail": "<rect width=\"20\" height=\"16\" x=\"2\" y=\"4\" rx=\"2\"/><path d=\"m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7\"/>", "phone": "<rect width=\"14\" height=\"20\" x=\"5\" y=\"2\" rx=\"2\"/><path d=\"M12 18h.01\"/>", "note": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/><path d=\"M16 13H8\"/><path d=\"M16 17H8\"/>", "undo": "<path d=\"M3 7v6h6\"/><path d=\"M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13\"/>", "trash": "<path d=\"M3 6h18\"/><path d=\"M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6\"/><path d=\"M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2\"/>", "sheet": "<path d=\"M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z\"/><path d=\"M14 2v4a2 2 0 0 0 2 2h4\"/><path d=\"M8 13h2\"/><path d=\"M14 13h2\"/><path d=\"M8 17h2\"/><path d=\"M14 17h2\"/>"};
@@ -2675,7 +2687,7 @@ var draft=null;
 function renderSettings(){
   draft=clone(state.settings);
   $('s-title').value=draft.title||'';$('s-prefix').value=draft.prefix||'';$('s-next').value=draft.next||1;$('s-box').value=draft.box||6;$('s-share').value=draft.share||'';$('s-tikkie').value=draft.tikkie||'';$('s-iban').value=fmtIban(draft.iban);$('s-holder').value=draft.holder||'';$('s-wa').value=draft.wa||'';
-  $('s-letter').value=device.letter||'';
+  $('s-letter').value=device.letter||''; link.render();
   renderWineEdit();
 }
 function renderWineEdit(){
@@ -2915,6 +2927,153 @@ $('btnReset').addEventListener('click',function(){
   ui.prompt('Dit verwijdert alle '+state.orders.length+' bestellingen op deze telefoon. Download eerst een back-up.\n\nTyp WISSEN om door te gaan.',{title:'Alle bestellingen wissen?',ok:'Alles wissen',danger:true,confirmText:'WISSEN',placeholder:'WISSEN'}).then(function(t){ if(t&&t.trim()==='WISSEN'){state.orders=[];state.deleted={};state.settings.next=1;persist();renderSettings();renderEntry();toast('Alles gewist');} });
 });
 
+
+/* ---------- laptops live koppelen (PeerJS / WebRTC, zonder account) ---------- */
+var link=(function(){
+  var SHARED=['title','prefix','box','share','tikkie','iban','holder','wa','wines','gifts'];
+  var peer=null, conns=[], cfg=device.link||null, retryT=null, sendT=null, statusTxt='', statusCls='', libP=null;
+  var ack=device.linkAck||{};           // satelliet: wat de centrale heeft bevestigd {id:stamp}
+  function save(){device.link=cfg;device.linkAck=ack;saveDevice();}
+  function loadLib(){
+    if(window.Peer) return Promise.resolve();
+    if(libP) return libP;
+    var urls=['https://cdn.jsdelivr.net/npm/peerjs@1.5.4/dist/peerjs.min.js','https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js'];
+    libP=new Promise(function(res,rej){
+      (function next(i){ if(i>=urls.length){libP=null;rej(new Error('lib'));return;}
+        var sc=document.createElement('script'); sc.src=urls[i]; sc.onload=function(){res();}; sc.onerror=function(){sc.remove();next(i+1);}; document.head.appendChild(sc); })(0);
+    });
+    return libP;
+  }
+  function peerOpts(){var o={debug:0};try{var x=JSON.parse(localStorage.getItem('hce-peer-cfg'));if(x)Object.assign(o,x);}catch(e){}return o;}
+  function code6(){var a='23456789ABCDEFGHJKMNPQRSTUVWXYZ',c=crypto.getRandomValues(new Uint8Array(6)),r='';for(var i=0;i<6;i++)r+=a[c[i]%a.length];return r;}
+  function pid(code){return 'hcewijn-'+String(code).toLowerCase();}
+  function shared(){var o={};SHARED.forEach(function(k){o[k]=state.settings[k];});return o;}
+  function setStatus(t,c){statusTxt=t;statusCls=c||'';var el=$('linkStatus');el.hidden=!cfg;el.className='linkpill '+statusCls;el.innerHTML='<span class="dot"></span>'+esc(t);render();}
+  function pending(){return state.orders.filter(function(o){return ack[o.id]!==stamp(o);}).length;}
+  function openConns(){return conns.filter(function(c){return c.open;});}
+  function send(c,msg){try{c.send(msg);}catch(e){}}
+  function sendChanges(c,full){
+    if(!c.open) return;
+    c.sent=c.sent||{};
+    var list=state.orders.filter(function(o){return full||c.sent[o.id]!==stamp(o);});
+    for(var i=0;i<list.length;i+=40){ send(c,{t:'orders',orders:list.slice(i,i+40)}); }
+    list.forEach(function(o){c.sent[o.id]=stamp(o);});
+    var del=JSON.stringify(state.deleted||{}); if(full||c.sentDel!==del){ send(c,{t:'deleted',deleted:state.deleted||{}}); c.sentDel=del; }
+    if(cfg&&cfg.role==='central'){ var sj=JSON.stringify(shared()); if(full||c.sentSet!==sj){ send(c,{t:'settings',s:shared()}); c.sentSet=sj; } }
+  }
+  function changed(){ if(!cfg) return; clearTimeout(sendT); sendT=setTimeout(function(){ openConns().forEach(function(c){sendChanges(c,false);}); updateStatus(); },150); }
+  window.__linkChanged=changed;
+  function rerender(){
+    if($('view-list').classList.contains('active')) renderList();
+    if($('view-pick').classList.contains('active')) renderPick();
+  }
+  function onData(c,m){
+    if(!m||typeof m!=='object') return;
+    if(m.t==='hello'){ c.letter=m.letter||''; c.label=m.label||''; checkLetters(c); updateStatus(); return; }
+    if(m.t==='orders'||m.t==='deleted'){
+      var before={}; state.orders.forEach(function(o){before[o.id]=1;});
+      var r=mergeData(m.t==='orders'?{orders:m.orders}:{orders:[],deleted:m.deleted});
+      if(m.t==='orders'){ c.sent=c.sent||{}; (m.orders||[]).forEach(function(o){ var mine=state.orders.find(function(x){return x.id===o.id;}); if(mine){ c.sent[o.id]=stamp(mine); if(cfg.role==='sat'&&stamp(mine)===stamp(o)) ack[o.id]=stamp(o); } }); if(cfg.role==='sat') save(); }
+      if(r.added||r.updated||r.removed){ persist(); rerender();
+        if(cfg.role==='central'&&r.added){ var nw=state.orders.filter(function(o){return !before[o.id];}); toast(nw.length===1?'Nieuwe bestelling '+nw[0].ref+' van '+nw[0].name:nw.length+' nieuwe bestellingen binnen'); }
+      }
+      if(cfg.role==='central'&&m.t==='orders'){ var a={}; (m.orders||[]).forEach(function(o){a[o.id]=stamp(o);}); send(c,{t:'ack',ids:a}); }
+      updateStatus(); return;
+    }
+    if(m.t==='ack'&&cfg.role==='sat'){ Object.keys(m.ids||{}).forEach(function(k){ack[k]=m.ids[k];}); save(); updateStatus(); return; }
+    if(m.t==='settings'&&cfg.role==='sat'){
+      var cur=JSON.stringify(shared()); SHARED.forEach(function(k){ if(m.s[k]!==undefined) state.settings[k]=m.s[k]; });
+      if(JSON.stringify(shared())!==cur){ persist(); if(!editingId) $('f-method').value=state.settings.iban?'QR / overmaken':'Tikkie'; renderEntry(); if($('view-settings').classList.contains('active')) renderSettings(); toast('Prijzen en instellingen van de centrale overgenomen'); }
+      return;
+    }
+    if(m.t==='dupletter'){ ui.alert('Een andere laptop gebruikt ook letter '+m.letter+'. Kies bij Instellingen → Meerdere telefoons een andere letter, anders kunnen referentienummers dubbel worden.','Letter al in gebruik'); return; }
+  }
+  function checkLetters(c){
+    var used={}; if(device.letter) used[device.letter]='centrale';
+    openConns().forEach(function(x){ if(x!==c&&x.letter) used[x.letter]=1; });
+    if(c.letter&&used[c.letter]) send(c,{t:'dupletter',letter:c.letter});
+  }
+  function wire(c){
+    conns.push(c);
+    c.on('open',function(){ send(c,{t:'hello',letter:device.letter||'',label:cfg.role}); sendChanges(c,true); updateStatus(); });
+    c.on('data',function(m){ onData(c,m); });
+    var gone=function(){ conns=conns.filter(function(x){return x!==c;}); updateStatus(); if(cfg&&cfg.role==='sat') schedule(3000); };
+    c.on('close',gone); c.on('error',gone);
+  }
+  function schedule(ms){ clearTimeout(retryT); retryT=setTimeout(connectSat,ms); }
+  function connectSat(){
+    if(!cfg||cfg.role!=='sat'||!peer||peer.destroyed) return;
+    if(peer.disconnected){ try{peer.reconnect();}catch(e){} schedule(3000); return; }
+    if(openConns().length) return;
+    conns.forEach(function(c){try{c.close();}catch(e){}}); conns=[];
+    setStatus('Verbinden met '+cfg.code+'…','wait');
+    var c=peer.connect(pid(cfg.code),{reliable:true,serialization:'json'}); wire(c);
+    setTimeout(function(){ if(!c.open){ try{c.close();}catch(e){} conns=conns.filter(function(x){return x!==c;}); updateStatus(); schedule(4000);} },8000);
+  }
+  function start(){
+    if(!cfg||KLANT) return;
+    setStatus(cfg.role==='central'?'Centrale wordt gestart…':'Verbinden met '+cfg.code+'…','wait');
+    loadLib().then(function(){
+      if(peer){try{peer.destroy();}catch(e){}}
+      peer=cfg.role==='central'?new Peer(pid(cfg.code),peerOpts()):new Peer(peerOpts());
+      peer.on('open',function(){ if(cfg.role==='sat') connectSat(); updateStatus(); });
+      peer.on('connection',function(c){ if(cfg.role==='central') wire(c); });
+      peer.on('disconnected',function(){ updateStatus(); setTimeout(function(){ if(peer&&!peer.destroyed&&peer.disconnected){try{peer.reconnect();}catch(e){}} },2000); });
+      peer.on('error',function(err){
+        var t=err&&err.type;
+        if(t==='unavailable-id'){ setStatus('Code '+cfg.code+' is nog bezet, opnieuw proberen…','wait'); setTimeout(start,5000); return; }
+        if(t==='peer-unavailable'){ setStatus('Centrale '+cfg.code+' niet gevonden. Staat die aan?','err'); schedule(5000); return; }
+        if(t==='network'||t==='server-error'||t==='socket-error'||t==='socket-closed'){ setStatus('Geen internet? Opnieuw proberen…','err'); setTimeout(function(){ if(peer&&peer.disconnected&&!peer.destroyed){try{peer.reconnect();}catch(e){start();}} else if(!peer||peer.destroyed) start(); },5000); return; }
+        updateStatus();
+      });
+    }).catch(function(){ setStatus('Koppelen lukt niet: geen internet','err'); setTimeout(start,10000); });
+  }
+  function updateStatus(){
+    if(!cfg){ $('linkStatus').hidden=true; render(); return; }
+    var n=openConns().length;
+    if(cfg.role==='central'){
+      if(!peer||!peer.open) return setStatus('Centrale '+cfg.code+' · geen verbinding met internet','err');
+      setStatus('Centrale · code '+cfg.code+' · '+n+' laptop'+(n===1?'':'s')+' gekoppeld',n?'ok':'wait');
+    } else {
+      var p=pending();
+      if(n) setStatus('Gekoppeld met '+cfg.code+(p?' · '+p+' wordt verstuurd…':' · alles verzonden'),p?'wait':'ok');
+      else setStatus('Niet verbonden met '+cfg.code+(p?' · '+p+' in wachtrij':'')+' · opnieuw proberen…', p?'err':'wait');
+    }
+  }
+  function render(){
+    var box=$('linkBox'); if(!box) return;
+    if(!cfg){
+      box.innerHTML='<div class="grid"><div><b>Deze laptop verzamelt alles</b><p class="muted" style="margin:4px 0 8px">Hier komen de bestellingen binnen en worden de betaalverzoeken verstuurd.</p><button class="btn primary" id="lkCentral">Maak dit de centrale laptop</button></div>'+
+        '<div><b>Deze laptop neemt bestellingen op</b><p class="muted" style="margin:4px 0 8px">Vul de koppelcode in die op de centrale laptop staat.</p><label for="lkCode">Koppelcode</label><div class="row"><input id="lkCode" maxlength="6" autocomplete="off" autocapitalize="characters" placeholder="bv. K7Q4MX" style="flex:1;text-transform:uppercase;font-family:ui-monospace,Menlo,Consolas,monospace;letter-spacing:3px"><button class="btn primary" id="lkJoin">Koppel</button></div></div></div>';
+      $('lkCentral').onclick=function(){ if(!device.letter){device.letter='A';saveDevice();renderEntry();toast('Deze laptop heeft letter A gekregen');} cfg={role:'central',code:code6()}; save(); start(); render(); };
+      $('lkJoin').onclick=function(){
+        var c=$('lkCode').value.trim().toUpperCase().replace(/[^A-Z0-9]/g,'');
+        if(c.length!==6){fieldError('lkCode','De koppelcode heeft 6 tekens.');return;}
+        if(!device.letter){fieldError('lkCode','Kies eerst hieronder bij "Meerdere telefoons" een letter voor deze laptop (B, C, D…).');return;}
+        clearFieldErrors(); cfg={role:'sat',code:c}; ack={}; save(); start(); render();
+      };
+      return;
+    }
+    var n=openConns().length;
+    if(cfg.role==='central'){
+      box.innerHTML='<div class="muted">Koppelcode voor de andere laptops:</div><div class="code" aria-label="Koppelcode '+cfg.code.split('').join(' ')+'">'+cfg.code+'</div>'+
+        '<div class="muted">'+esc(statusTxt)+'</div><div class="peers">'+openConns().map(function(c){return '<span class="badge b-ok">'+ic('check')+'Laptop '+esc(c.letter||'?')+'</span>';}).join('')+'</div>'+
+        '<div class="row" style="margin-top:10px"><button class="btn danger" id="lkStop">Stoppen als centrale</button></div>';
+    } else {
+      box.innerHTML='<div>Gekoppeld met centrale <b class="ref">'+esc(cfg.code)+'</b> als laptop <b>'+esc(device.letter||'?')+'</b></div><div class="muted" style="margin-top:4px">'+esc(statusTxt)+'</div>'+
+        '<div class="row" style="margin-top:10px"><button class="btn" id="lkRetry">Opnieuw verbinden</button><button class="btn danger" id="lkStop">Ontkoppelen</button></div>';
+      $('lkRetry').onclick=function(){ if(!peer||peer.destroyed) start(); else connectSat(); };
+    }
+    $('lkStop').onclick=function(){
+      var p=cfg.role==='sat'?pending():0;
+      ui.confirm(p?'Let op: '+p+' bestelling(en) zijn nog niet bij de centrale aangekomen. Die blijven wel op deze laptop staan.':'De bestellingen blijven op deze laptop staan.',{title:cfg.role==='central'?'Stoppen als centrale?':'Ontkoppelen?',ok:cfg.role==='central'?'Stoppen':'Ontkoppelen',danger:true}).then(function(y){
+        if(!y) return; clearTimeout(retryT); try{peer&&peer.destroy();}catch(e){} peer=null; conns=[]; cfg=null; save(); updateStatus(); });
+    };
+  }
+  $('linkStatus').addEventListener('click',function(){ showView('settings'); $('linkCard').scrollIntoView(); });
+  setInterval(function(){ if(cfg&&cfg.role==='sat'&&peer&&!peer.destroyed&&!openConns().length) connectSat(); },15000);
+  return {start:start,render:render,status:updateStatus};
+})();
 window.addEventListener('beforeunload',function(e){ if(KLANT) return; if(!editingId && orderBottles(buildOrderFromForm())>0){e.preventDefault();e.returnValue='';} });
 resetForm();
 if(KLANT){ setupKlantMode(); }
@@ -2924,6 +3083,7 @@ else {
     if(im){ history.replaceState(null,'',location.pathname+location.search); setTimeout(function(){ importKlant(im[1]).then(function(ok){ if(ok) showView('list'); }); },50); }
   };
   checkImport(); window.addEventListener('hashchange',checkImport);
+  link.render(); link.start();
 }
 })();
 </script>

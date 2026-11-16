@@ -15,6 +15,14 @@ Eén HTML-bestand (`index.html`) om op de proefavond snel bestellingen in te voe
 - In het overzicht staat per bestelling op welke telefoon hij is ingevoerd en of het betaalverzoek al verstuurd is (filter: *Betaalverzoek nog niet verstuurd*).
 - Meerdere telefoons: elke telefoon krijgt een letter (HCE-A-001, HCE-B-001), bestellingen versturen via WhatsApp en samenvoegen op één telefoon (nieuwste wijziging wint, verwijderde bestellingen blijven weg)
 
+## Laptops live koppelen (koppelcode)
+
+1. Op de laptop die alles verzamelt: Instellingen → *Laptops live koppelen* → **Maak dit de centrale laptop**. Er verschijnt een koppelcode van 6 tekens.
+2. Op elke andere laptop: kies bij *Meerdere telefoons* een eigen letter (B, C, D…), vul de koppelcode in en tik **Koppel**.
+3. Elke bestelling en wijziging gaat direct naar de centrale. Prijzen, wijnlijst en IBAN van de centrale gaan automatisch naar alle laptops. Valt het internet even weg, dan blijven bestellingen in de wachtrij en worden ze vanzelf nagestuurd.
+
+Dit werkt via een rechtstreekse verbinding tussen de browsers (WebRTC, PeerJS). Er is internet nodig; de bestellingen staan niet op een server. Werkt het netwerk niet mee, gebruik dan *Versturen* en *Samenvoegen* hieronder als terugvaloptie.
+
 ## Met meerdere telefoons
 
 1. Open de app op elke telefoon en kies bovenaan bij *Nieuw* een andere letter (A, B, C…).
