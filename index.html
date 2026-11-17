@@ -48,6 +48,7 @@ header h1{margin:0;font-size:18px;font-weight:650;padding-right:110px}
 .theme-btn{position:absolute;top:max(8px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right));display:inline-flex;align-items:center;gap:6px;min-height:44px;min-width:44px;padding:6px 12px;border:1px solid rgba(255,255,255,.35);border-radius:999px;background:rgba(255,255,255,.12);color:#fff;font-size:14px}
 .theme-btn .ic{width:16px;height:16px}
 .linkpill{display:inline-flex;align-items:center;gap:6px;margin-top:6px;font-size:13px;font-weight:600;background:rgba(255,255,255,.14);border-radius:999px;padding:3px 10px;cursor:pointer}
+.linkpill[hidden]{display:none}
 .linkpill .dot{width:9px;height:9px;border-radius:50%;background:#9ca3af;flex:none}
 .linkpill.ok .dot{background:#4ade80}.linkpill.wait .dot{background:#fbbf24}.linkpill.err .dot{background:#f87171}
 .code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:34px;font-weight:800;letter-spacing:6px;color:var(--accent)}
@@ -113,7 +114,11 @@ button{font:inherit;cursor:pointer}
 /* orders list */
 .order{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-bottom:8px;background:var(--card)}
 .order .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-.order .nm{font-weight:650}
+.order .nm{font-weight:700;font-size:17px}
+.order .who{display:inline-flex;align-items:center;gap:10px;flex-wrap:wrap}
+.order .tel{display:inline-flex;align-items:center;gap:5px;min-height:44px;padding:4px 10px;border:1px solid var(--line);border-radius:999px;background:var(--field);color:var(--ink);font-weight:650;font-size:16px;font-variant-numeric:tabular-nums;cursor:pointer}
+.order .tel:hover{border-color:var(--accent)}
+.order .tel.none{color:var(--amber);background:var(--amber-soft);border-color:transparent;font-size:14px;cursor:default}
 .order .lines{font-size:14px;color:var(--muted);margin-top:4px}
 .badge{display:inline-flex;align-items:center;gap:4px;font-size:13px;padding:3px 9px;border-radius:999px;border:1px solid transparent;font-weight:600;user-select:none}
 .badge .ic{width:14px;height:14px;vertical-align:-2px}
@@ -2534,7 +2539,7 @@ function renderStats(){
 function renderList(){
   renderStats();
   var q=$('search').value.trim().toLowerCase(), f=$('filter').value;
-  var list=state.orders.slice().reverse().filter(function(o){
+  var list=state.orders.slice().sort(function(a,b){return (a.created||'').localeCompare(b.created||'')||String(a.ref).localeCompare(String(b.ref),'nl',{numeric:true});}).filter(function(o){
     if(f==='unpaid'&&o.paid) return false; if(f==='paid'&&!o.paid) return false;
     if(f==='undelivered'&&o.delivered) return false; if(f==='delivered'&&!o.delivered) return false; if(f==='unsent'&&(o.sentAt||o.paid)) return false;
     if(!q) return true;
@@ -2543,9 +2548,13 @@ function renderList(){
   if(!list.length){$('orderList').innerHTML='<p class="muted" style="text-align:center;padding:20px">'+(state.orders.length?'Niets gevonden.':'Nog geen bestellingen.')+'</p>';return;}
   $('orderList').innerHTML=list.map(function(o){
     var ls=orderLines(o).map(function(l){return qtyText(l)+' '+esc(l.kind==='wijn'?l.nr+'. '+l.name:l.name);}).join(' · ');
-    return '<div class="order" data-id="'+o.id+'"><div class="top"><span class="ref">'+esc(o.ref)+'</span><span class="nm">'+esc(o.name)+'</span>'+
+    var tm=o.created?new Date(o.created).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}):'';
+    return '<div class="order" data-id="'+o.id+'"><div class="top"><span class="ref">'+esc(o.ref)+'</span>'+
+      '<span class="who"><span class="nm">'+esc(o.name)+'</span>'+
+      (o.phone?'<button type="button" class="tel" data-copyphone="'+esc(o.phone)+'" title="Kopieer telefoonnummer" aria-label="Telefoonnummer '+esc(o.phone)+' kopiëren">'+ic('phone')+'<span>'+esc(o.phone)+'</span></button>'
+              :'<span class="tel none">'+ic('phone')+'geen nummer</span>')+'</span>'+
       (o.company?'<span class="badge b-grey">factuur: '+esc(o.company)+'</span>':'')+
-      '<span class="spacer"></span><b>'+eur(o.total)+'</b></div>'+
+      '<span class="spacer"></span><span class="muted num" title="Tijd van bestellen">'+tm+'</span><b class="num">'+eur(o.total)+'</b></div>'+
       '<div class="lines">'+ls+'</div>'+
       (o.note?'<div class="lines">'+ic('note')+' '+esc(o.note)+'</div>':'')+
       '<div class="row" style="margin-top:8px">'+
@@ -2562,6 +2571,7 @@ function renderList(){
 $('search').addEventListener('input',renderList);
 $('filter').addEventListener('change',renderList);
 $('orderList').addEventListener('click',function(e){
+  var cp=e.target.closest('[data-copyphone]'); if(cp){ copy(cp.dataset.copyphone); return; }
   var card=e.target.closest('.order'); if(!card) return; var o=findOrder(card.dataset.id); if(!o) return;
   var tg=e.target.closest('[data-tog]');
   if(tg&&tg.dataset.tog==='sent'){ if(o.sentAt){o.sentAt='';o.sentBy='';} else markSent(o); o.updated=new Date().toISOString(); persist(); renderList(); return; }
